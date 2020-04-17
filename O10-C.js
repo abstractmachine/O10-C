@@ -64,4 +64,4 @@ function parseText() {
 // démarrer le "parseur"
 parseText()
 
-bot.login('NjkwMTI5NjkxMzkwMzc3OTk4.XnM8iw.llKbd6iUsWrCaS2ylZgY4tZxCb4')
+bot.login('token-here')
