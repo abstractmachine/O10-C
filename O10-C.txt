@@ -1,0 +1,39 @@
+# Toilettes
+
+! look
++ Detecting your presence, the lights turn on by themselves. There's a sink, a hand dryer, a trash can full of paper, a mirror, and freshly paint red door.
+
+! inspect mirror
++ Looking in the mirror, you can see your own face. It might be a good place to put on make-up quickly.
+
+! apply make-up
+? makeup kit
++ Using the mirror, you put on your make-up properly. You feel beautiful, and somewhat stronger now. {+made up}
+- Unfortunately, you don't have any make-up kit.
+
+! open red door
+? red door
++ The red door is already open.
+- The door is now open. The toilets are just in front of you. The view fills you with warth. {+red door}
+
+! close red door
+? red door
++ The red door is now closed. {-red door}
+- The red door is already closed.
+
+! inspect trash can
++ This is a trash can. It is full of unstained sanitary paper.
+
+! remove paper
+? paper removed
++ The sanitary paper is now removed. In the middle of the trash can, there is a damaged frog-shaped USB. {+paper removed}
+
+! take usb
+? paper removed
++ You have taken the frog-shaped USB from the trash can.
+- You can't see any USB device in here.
+
+# Numérique
+
+! look
++ There's a very large and fancy circle table at the center of the room. On this table, there are computers, some electronic devices, pieces of papers, and two giant TV screens. Oh, god, you've never seen screens that big. There's also a board on your right, and a metal closet on your left. At the back of the room stands an arcade machine.
