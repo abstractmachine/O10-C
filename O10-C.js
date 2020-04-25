@@ -36,6 +36,9 @@ bot.on('message', message => {
   })
 
 function parseMessage(message) {
+	console.log("We are in "+ histoire.salonActuel)
+	var reply = "I'm sorry @"+message.author.username+", I'm afraid you can't do that."
+	
 	// verifier que le message est envoyé dans le salon actuel 
 	if (message.channel.name == histoire.salonActuel) {
 		
@@ -43,18 +46,21 @@ function parseMessage(message) {
 		let salon = getSalonByName(histoire.salonActuel)
 		
 		// rechercher une action correspondant au message
+		if (salon == null || !salon.hasOwnProperty("actions")) {
+			message.reply("There is nothing to do here...")
+			return
+		}
 		let action = findMatchingAction(message.content, salon.actions)
 		//console.log(action)
 		// la réponse par defaut en cas où on trouve pas de solution
-		var reply = "I'm sorry @"+message.author.username+", I'm afraid you can't do that."
+		
 		
 		if (action == null) {
 			// répondre sorry si aucune action trouvée
 			message.reply(reply)
 			return
 		}
-		
-		
+			
 		if (action.conditions != null) {
 			// la réponse est soumise a condition
 			var ok = true
@@ -72,7 +78,7 @@ function parseMessage(message) {
 						
 		} else {
 			// no condition, reply with default reaction
-			reply = action.reaction
+			reply = computeReply(action.reaction, salon)
 		}
 		
 		message.reply(reply)
@@ -80,16 +86,6 @@ function parseMessage(message) {
 	} else {
 		message.reply("I'm in #"+ histoire.salonActuel)
 	}
-}
-
-function messageText(message) {
-
-    //console.log(message.channel.name);
-    //console.log(message.guil)
-    // bot.channels.find("name","parc a chien").send("Welcome!")
-	// message.channel.name == "🙀parc-à-chiens")
-	// message.reply("Hello")
-
 }
 
 // interpreter le script O10-C.txt
@@ -174,17 +170,17 @@ function parseText() {
 function computeReply(reply, salon) {
 	let regexSetter = /{\s*(@|\+|-)\s*([^}\n\r]*)}/gm
 	let resultSetter = [...reply.matchAll(regexSetter)]
-	console.log(resultSetter)
+	//console.log(resultSetter)
 	if (resultSetter.length > 0) {
 		let operator = resultSetter[0][1]
 		let variable = resultSetter[0][2]
-		console.log(operator)
-		console.log(variable)
+		//console.log(operator)
+		//console.log(variable)
 		
 		// 'change salon' command
 		if (operator == "@") {
 			histoire.salonActuel = variable
-			console.log()
+			console.log("We are now in "+histoire.salonActuel)
 		} else {
 			// salon state setter
 			salon.etats[variable] = operator == "+" ? true : false

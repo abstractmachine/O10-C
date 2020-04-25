@@ -1,7 +1,19 @@
+# 🌈général
+
+!look
++ You are in the school entrance hall, from here you can go the the toilets or to the numérique classroom (for now).
+
+! go toilets / enter toilets
++ You are now in the toilets {@💩toilettes}
+
+! go numérique / enter numérique
++ You are now in the numérique {@💾numérique}
+
+
 # 💩toilettes
 
 ! look
-+Detecting your presence, the lights turn on by themselves. There's a sink, a hand dryer, a trash can full of paper, a mirror, and freshly paint red door.
++ Detecting your presence, the lights turn on by themselves. There's a sink, a hand dryer, a trash can full of paper, a mirror, and freshly paint red door.
 
 ! inspect mirror / see mirror
 ? having shit
@@ -71,14 +83,14 @@
 
 ! leave / go back / leave toilets
 ? hands clean & !having shit
-+ You leave the restroom, proud of yourself for being able to wash your hands properly. {-hands clean}(leave)
-- You leave the restroom, crushed by the guilt of not washing your hands properly. You really feel like a disgusting pig. {-hands washed}(leave)
++ You leave the restroom, proud of yourself for being able to wash your hands properly. {@🌈général}
+- You leave the restroom, crushed by the guilt of not washing your hands properly. You really feel like a disgusting pig. {@🌈général}
 
 
-! leave toilettes
-+ You are now in the main hall. {@🌈général}
-
-# numérique
+# 💾numérique
 
 ! look
 + There's a very large and fancy circle table at the center of the room. On this table, there are computers, some electronic devices, pieces of papers, and two giant TV screens. Oh, god, you've never seen screens that big. There's also a board on your right, and a metal closet on your left. At the back of the room stands an arcade machine.
+
+! leave numérique / leave classroom
++ Your are now in the main hall. {@🌈général}
