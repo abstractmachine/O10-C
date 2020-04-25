@@ -41,33 +41,42 @@ function parseMessage(message) {
 		
 		// on récupère le salon actuel
 		let salon = getSalonByName(histoire.salonActuel)
-		let action = findMatchingAction(message.content, salon.actions)
 		
+		// rechercher une action correspondant au message
+		let action = findMatchingAction(message.content, salon.actions)
+		//console.log(action)
 		// la réponse par defaut en cas où on trouve pas de solution
 		var reply = "I'm sorry @"+message.author.username+", I'm afraid you can't do that."
 		
-		if (action != null) {
-			if (action.reaction.condition != null) {
-				
-				// check for key 'condition' in salon states
-				let exist = (action.reaction.condition in salon.states)
-				
-				// if key exist and key is true, reply with 'true' reaction
-				if (exist && salon.states[action.reaction.condition] == true) {
-					reply = action.reaction.true
-					reply = computeReply(reply, salon)
-				// else reply the with 'false' reaction	
-				} else {
-					reply = action.reaction.false
-					reply = computeReply(reply, salon)
+		if (action == null) {
+			// répondre sorry si aucune action trouvée
+			message.reply(reply)
+			return
+		}
+		
+		
+		if (action.conditions != null) {
+			// la réponse est soumise a condition
+			var ok = true
+			
+			for (condition in action.conditions) {
+				console.log(salon.etats[condition] +" -> " +action.conditions[condition] )
+				if (salon.etats[condition] != action.conditions[condition]) {
+					// condition is not reached
+					ok = false
+					break;
 				}
-			} else {
-				// no condition, reply with 'default' reaction
-				reply = action.reaction.default
 			}
+			reply = ok ? action.reaction : action.objection
+			reply = computeReply(reply, salon)
+						
+		} else {
+			// no condition, reply with default reaction
+			reply = action.reaction
 		}
 		
 		message.reply(reply)
+		
 	} else {
 		message.reply("I'm in #"+ histoire.salonActuel)
 	}
@@ -98,64 +107,67 @@ function loadText() {
 function parseText() {
 
 	let scenario = loadText()
-	let regexSalons = /^#(.*)[\n\r]*([^#]*)/gm
-	let resultatSalons = [...scenario.matchAll(regexSalons)]
-	// groupe 1 : capturer toutes les occurences de #salon en cherchant des signes # suivie d'un titre
-	// groupe 2 : capturer tout le contenu qui suit jusqu'au prochain #nom de salon
-
-	// lister tous les resultats de salons
-	for (indexSalon in resultatSalons) {
-		let nomSalon = resultatSalons[indexSalon][1].trim()
-		let contenuSalon = resultatSalons[indexSalon][2].trim()
+	let scenarioLines = scenario.split(/[\r\n]+/g).map(s => s.trim()).filter( e => e.length > 0) // split scenario by lines, trim and remove empty lines
+	var salon = {} // start with an empty salon object
+	var action = {}
 		
-		actionsSalon = parseActions(contenuSalon) // extraire les actions du salon
+	for (lineIndex in scenarioLines) {
+		let line = scenarioLines[lineIndex]
 		
-		var salon = {
-			nom: nomSalon,
-			actions: actionsSalon,
-			states: {}
-		}
 		
-		histoire["salons"][indexSalon] = salon // ajouter le salon a l'histoire
-	}
-}
-
-function parseActions(contenuSalon) {
-		// rechercher les actions (eg: !look mirror) et le contenu de l'action qui suit
-		let regexActions = /^!(.*)[\n\r]*([^!]*)/gm
-		let resultatActions = [...contenuSalon.matchAll(regexActions)]
-		
-		// lister toutes les actions
-		let actions = []
-		for (indexActions in resultatActions) {
-			let nomAction = resultatActions[indexActions][1].trim()
-			let contenuAction = resultatActions[indexActions][2].trim()
-			let reaction = parseReaction(contenuAction)
+		switch(line[0]) { // suivant le premier caractère de la ligne
+			case "#": // nouveau salon
 			
-			let action = {
-				action: nomAction,
-				reaction: reaction
-			}
-			actions[indexActions] = action
+				let nomSalon = line.substr(1).trim()
+				
+				// créer un nouvel objet salon avec son nom
+				salon = {
+					titre: nomSalon,
+					actions: [],
+					etats: {}
+					}
+				histoire.salons.push(salon) // add the new salon to the story
+				break;
+				
+			case "!": // action(s) du salon
+				let regexActions = /!\s*(.*)/ // trouver toutes les actions et synonymes : !fait ci / fait ça / fait quoi
+				let allCommands = line.match(regexActions)[1]
+				let commands = allCommands.split(/\//g).map(s => s.trim()).filter( e => e.length > 0)// séparer les actions par /
+				
+				action = {commandes:commands,
+						  conditions: null}
+				
+				salon.actions.push(action) // ajouter la liste d'actions synonymes au salon
+				break;
+				
+			case "?": // condition de réaction
+				let allconditions = line.substr(1).trim()
+				let conditionList = allconditions.split(/\&/g).map(s => s.trim()).filter( e => e.length > 0)// séparer les conditions par &
+				let conditions = {}
+				for (i in conditionList) {
+					
+					if (conditionList[i][0]=="!") {
+						conditions[conditionList[i].substr(1).trim()] = false // negative condition
+						salon.etats[conditionList[i].substr(1).trim()] = false // ajouter la variable au salon
+					} else {
+						conditions[conditionList[i]] = true // positive condition
+						salon.etats[conditionList[i]] = false // ajouter la variable au salon
+					}
+				}
+				action.conditions = conditions
+				break;
+				
+			case "+": // pro condition 
+				let positiveResponse = line.substr(1).trim()
+				action.reaction = positiveResponse
+				break;
+				
+			case "-": // non condition
+				let negativeResponse = line.substr(1).trim()
+				action.objection = negativeResponse
+				break;
 		}
-		return actions
-}
-
-function parseReaction(contenuAction) {
-	var lines = contenuAction.match(/[^\r\n]+/g) 
-	let condition = lines[0][0] == "?" // si la ligne commence par un ? , il y'a une condition
-	
-	let conditionName = condition ? lines[0].substr(1).trim() : null
-	reaction = {
-		condition: conditionName
-	}
-	if (condition) {
-		reaction["true"] = lines[1].substr(1).trim()
-		reaction["false"] = lines[2].substr(1).trim()
-	} else {
-		reaction["default"] = lines[0].substr(1).trim()
-	}
-	return reaction
+	}	
 }
 
 // check for state setter in reply 
@@ -175,8 +187,9 @@ function computeReply(reply, salon) {
 			console.log()
 		} else {
 			// salon state setter
-			salon.states[variable] = operator == "+" ? true : false
+			salon.etats[variable] = operator == "+" ? true : false
 		}
+		console.log(salon.etats)
 		return reply.replace(regexSetter, "")
 	}
 	return reply	
@@ -185,7 +198,7 @@ function computeReply(reply, salon) {
 // find a salon by name in 'histoire' 
 function getSalonByName(salonName) {
 	for (indexSalon in histoire.salons) {
-		if (histoire.salons[indexSalon].nom == salonName) {
+		if (histoire.salons[indexSalon].titre == salonName) {
 			return histoire.salons[indexSalon]
 		}
 	}
@@ -197,12 +210,17 @@ function getSalonByName(salonName) {
 function findMatchingAction(sentence, actions) {
 	let sentenceWords = sentence.split(/(\s+)/).filter( e => e.trim().length > 0)
 	
-	for (indexAction in actions) {
-		let sentenceAction = actions[indexAction].action.split(/(\s+)/).filter( e => e.trim().length > 0)
+	for (i in actions) {
+		let commandes = actions[i].commandes
 		
-		// https://stackoverflow.com/questions/1187518/how-to-get-the-difference-between-two-arrays-in-javascript
-		let intersection = sentenceWords.filter(x => sentenceAction.includes(x))
-		if (intersection.length == sentenceAction.length) return actions[indexAction]
+ 		for (j in commandes) {
+ 			// séparer la commande par mots
+ 			let commandParts = commandes[j].split(/(\s+)/).map(s => s.trim()).filter( e => e.length > 0)
+ 		
+ 			// https://stackoverflow.com/questions/1187518/how-to-get-the-difference-between-two-arrays-in-javascript
+ 			let intersection = sentenceWords.filter(x => commandParts.includes(x))
+ 			if (intersection.length == commandParts.length) return actions[i]
+ 		}
 	}
 	return null
 }
@@ -211,4 +229,4 @@ function findMatchingAction(sentence, actions) {
 parseText()
 console.log(util.inspect(histoire, {showHidden: false, depth: null, colors: true}))
 
-bot.login('token-here')
+bot.login('NjkwMTI5NjkxMzkwMzc3OTk4.XqFM6w.WnjbHtZ4sHL5Y2l0GplV-xPVLDI')
