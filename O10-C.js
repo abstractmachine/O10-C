@@ -229,4 +229,4 @@ function findMatchingAction(sentence, actions) {
 parseText()
 console.log(util.inspect(histoire, {showHidden: false, depth: null, colors: true}))
 
-bot.login('NjkwMTI5NjkxMzkwMzc3OTk4.XqFM6w.WnjbHtZ4sHL5Y2l0GplV-xPVLDI')
+bot.login('token-here')
