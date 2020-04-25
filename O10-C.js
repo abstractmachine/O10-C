@@ -7,7 +7,7 @@ const bot = new discord.Client()
 let histoire = {
 	titre: "mon histoire",
 	salons:[],
-	salonActuel: "💩toilettes",
+	salonActuel: "🌈général",
 }
 
 bot.on('ready', () => {
@@ -36,7 +36,7 @@ bot.on('message', message => {
   })
 
 function parseMessage(message) {
-	console.log("We are in "+ histoire.salonActuel)
+	//console.log("We are in "+ histoire.salonActuel)
 	var reply = "I'm sorry @"+message.author.username+", I'm afraid you can't do that."
 	
 	// verifier que le message est envoyé dans le salon actuel 
@@ -66,9 +66,9 @@ function parseMessage(message) {
 			var ok = true
 			
 			for (condition in action.conditions) {
-				console.log(salon.etats[condition] +" -> " +action.conditions[condition] )
+				//console.log(salon.etats[condition] +" -> " +action.conditions[condition] )
 				if (salon.etats[condition] != action.conditions[condition]) {
-					// condition is not reached
+					// the condition is not reached
 					ok = false
 					break;
 				}
@@ -84,7 +84,7 @@ function parseMessage(message) {
 		message.reply(reply)
 		
 	} else {
-		message.reply("I'm in #"+ histoire.salonActuel)
+		message.reply("I'm in #"+ histoire.salonActuel + ". Come and join me.")
 	}
 }
 
@@ -172,19 +172,25 @@ function computeReply(reply, salon) {
 	let resultSetter = [...reply.matchAll(regexSetter)]
 	//console.log(resultSetter)
 	if (resultSetter.length > 0) {
-		let operator = resultSetter[0][1]
-		let variable = resultSetter[0][2]
-		//console.log(operator)
-		//console.log(variable)
+		for (i in resultSetter) {
+			let operator = resultSetter[i][1]
+			let variable = resultSetter[i][2]
+			//console.log(operator)
+			//console.log(variable)
 		
-		// 'change salon' command
-		if (operator == "@") {
-			histoire.salonActuel = variable
-			console.log("We are now in "+histoire.salonActuel)
-		} else {
-			// salon state setter
-			salon.etats[variable] = operator == "+" ? true : false
+			// 'change salon' command
+			if (operator == "@") {
+				histoire.salonActuel = variable
+				salon = getSalonByName(variable)
+				console.log("We are now in "+histoire.salonActuel)
+				//console.log(util.inspect(salon, {showHidden: false, depth: null, colors: true}))
+
+			} else {
+				// salon state setter
+				salon.etats[variable] = operator == "+" ? true : false
+			}		
 		}
+		
 		console.log(salon.etats)
 		return reply.replace(regexSetter, "")
 	}
@@ -198,27 +204,43 @@ function getSalonByName(salonName) {
 			return histoire.salons[indexSalon]
 		}
 	}
+	console.log("no salon named " + salonName)
 	// no salon with that name, return null
 	return null
 }
 
 // find a matching action from a sentence in an action list
 function findMatchingAction(sentence, actions) {
+	// séparer la phrase en mots
 	let sentenceWords = sentence.split(/(\s+)/).filter( e => e.trim().length > 0)
 	
+	var matches = []
+	var result = null
+	var score = 0
 	for (i in actions) {
-		let commandes = actions[i].commandes
 		
+		let commandes = actions[i].commandes
+
  		for (j in commandes) {
  			// séparer la commande par mots
  			let commandParts = commandes[j].split(/(\s+)/).map(s => s.trim()).filter( e => e.length > 0)
  		
  			// https://stackoverflow.com/questions/1187518/how-to-get-the-difference-between-two-arrays-in-javascript
  			let intersection = sentenceWords.filter(x => commandParts.includes(x))
- 			if (intersection.length == commandParts.length) return actions[i]
+ 			
+ 			// command match action 
+ 			if (intersection.length == commandParts.length) {
+ 				
+ 				// set only if matching score is higher than previous match
+ 				if (score <= intersection.length) {
+					result = actions[i]
+					score = intersection.length
+ 				}
+ 			}
  		}
 	}
-	return null
+	console.log(result)
+	return result
 }
 
 // démarrer le "parseur"

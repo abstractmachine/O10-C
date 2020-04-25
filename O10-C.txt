@@ -1,18 +1,26 @@
 # 🌈général
 
 !look
-+ You are in the school entrance hall, from here you can go the the toilets or to the numérique classroom (for now).
++ You are in the school entrance hall, from here you can go to the toilets, the numeric classroom and the dog park (for now).
 
 ! go toilets / enter toilets
-+ You are now in the toilets {@💩toilettes}
+? toilets
++ You are going back to the toilets {@💩toilettes}
+- You are now in the toilets {+toilets} {@💩toilettes}
 
-! go numérique / enter numérique
-+ You are now in the numérique {@💾numérique}
+! go numeric / enter numeric
+? numeric
++ You are now in the numeric classroom, once again. {@💾numérique}
+- You are now in the numeric classroom {+numeric} {@💾numérique}
 
+! go dog park / enter dog park / go parc chiens / enter parc chiens
+? dog park
++ You are going back to the dog park  {@🙀parc-à-chiens}
+- You are now in front of the dog park  {+dog park} {@🙀parc-à-chiens}
 
 # 💩toilettes
 
-! look
+! look / observe
 + Detecting your presence, the lights turn on by themselves. There's a sink, a hand dryer, a trash can full of paper, a mirror, and freshly paint red door.
 
 ! inspect mirror / see mirror
@@ -89,8 +97,114 @@
 
 # 💾numérique
 
-! look
+! look / observe
 + There's a very large and fancy circle table at the center of the room. On this table, there are computers, some electronic devices, pieces of papers, and two giant TV screens. Oh, god, you've never seen screens that big. There's also a board on your right, and a metal closet on your left. At the back of the room stands an arcade machine.
 
+! look board / see board / inspect board
+? banana peel
++ A poster featuring a lot of screenshots from different games is pinned to the board. You can read « Video games have always been experimental » on it. Something else has been pinned next to it, but it's now gone.
+- A poster featuring a lot of screenshots from different games is pinned to the board. You can read « Video games have always been experimental » on it. Oddly enough, there's also a withered banana peel pinned to the board.
+
+! take banana / take peel / take withered banana peel
+? banana peel
++ You have already taken the banana peel. You monster.
+- You have taken the withered banana peel. You feel like comitting sacrilege. (Most importantly, what do you plan doing with this thing?!)
+
+! look closet / look metal closet
+? padlock
++ The closet is locked down. It seems you need to enter a 4-numbers password to open it.
+- Inside the closet, you can see some laptop computers, Ipads, gaming gear and pink paper.
+
+! lock padlock / lock closet / lock metal closet
+? padlock
++ The metal closet is already locked down.
+- You have closed and locked down the closet.
+
+! take computer / take laptop
+? padlock
++ There is no laptop to be taken.
+- You have taken a laptop computer from the closet. {+laptop}
+
+! take ipad
+? padlock
++ There is no ipad to be taken.
+- You have taken an ipad from the closet. {+ipad}
+
+! take paper
+? padlock
++ You have taken a regular white piece of paper from the table. {+white paper}
+- You have taken a flashy and stylish pink piece of paper from the closet. {+pink paper}
+
+! take game gear / take gamepad
+? padlock
++ There is no gamepad to be taken here.
+- You have taken a gamepad from the closet. {+gamepad}
+
+! look arcade machine / look arcade
++ You are in front of an arcade machine. Even though there's some rust to it, the buttons look new.
+
+! boot up arcade / turn on arcade
+? arcade lit
++ The arcade machine is already lit.
+- As you boot up the machine, the screen flickers. A whole bunch of terminal lines and informations you cannot comprehend scrolls before your amazed eyes, on the screen. After a few dozen of seconds, the arcade machine appears to be finally ready {+arcade lit}.
+
+! play zork / play zork I
+? arcade lit
++ You play Zork I. Playing a text game inside a text game sounds really funny.
+- You can't do that, as the arcade machine is turned off.
+
+! turn off arcade / turn off arcade machine
+? arcade lit
++ You finally decide to leave it for now. You turn down the arcade machine, even though it pains you a little bit {-arcade lit}.
+- The arcade machine is already turned off.
+
+! look tv / inspect tv / look screen
+? tv on
++ That is a big-ass screen. It is turned on. There's some sort of terrible TV show on display. It's noisy.
+- That is a big-ass screen. It is turned off.
+
+! watch tv
+? tv on
++ You decide to sit down in front on the tv show and to watch it for a while. It seems to be a kind of action story, with a white man as a main character. There are crashing cars, explosions, guns, a kind of russian evil organization, and of course seducing ladies for the main character to fuck with. As you progressively feel your brain dying and pouring out from your ears while watching this shit, the show suddenly freezes for a few seconds. The screen flickers, and then displays the numbers "6666" before shuting down. {-tv on}
+- You watch the TV… But the TV is turned off.
+
+! turn on screen / turn on tv
+? tv on
++ The TV is already lit.
+- The screen is now lit. There's some sort of terrible TV show on display. It's noisy. {+tv on}
+
+! turn off screen / turn off tv
+? tv on
++ The screen is now turned off. It is better so. {-tv on}
+- The screen is already turned off.
+
 ! leave numérique / leave classroom
-+ Your are now in the main hall. {@🌈général}
++ You are now in the main hall. {@🌈général}
+
+
+# 🙀parc-à-chiens
+
+! look / observe
++ A huge gathering of dogs, poneys and cats are turning their back at you.  
+
+! caress a dog 
+ - You are not close enough to do that. 
+
+! approach 
+ - A grid prevents you from entering.
+
+! pluck face into the hole 
+  + a cat feeds you with fresh green grass 
+
+! talk / say hi 
+  + they haven't seen your face yet nor you have seen theirs
+
+! observe 
+ + they are constantly making circles like a danse, but there's stil no way you could come across their faces.'
+
+! bark 
+ + a white poney turns over and barks at you. 
+ 
+! leave park / leave parc
++ You are now in the main hall. {@🌈général}
+
