@@ -1,12 +1,12 @@
 # 🌈général
 
-!look
+! look
 + You are in the school entrance hall, from here you can go to the toilets, the numeric classroom and the dog park (for now).
 
 ! go toilets / enter toilets
 ? toilets
-+ You are going back to the toilets {@💩toilettes}
-- You are now in the toilets {+toilets} {@💩toilettes}
++ You are going back to the toilets {@💩toilettes} {+hands clean}
+- You are now in the toilets {+toilets} {@💩toilettes} {+hands clean}
 
 ! go numeric / enter numeric
 ? numeric
@@ -107,8 +107,18 @@
 
 ! take banana / take peel / take withered banana peel
 ? banana peel
-+ You have already taken the banana peel. You monster.
++ You have already taken the banana peel. You monster. {+banana peel}
 - You have taken the withered banana peel. You feel like comitting sacrilege. (Most importantly, what do you plan doing with this thing?!)
+
+! enter 6666 / enter code 6666
+? padlock
++ The padlock has already been unlocked!
+- The padlock is unlocked, the closet is now open. {+padlock}
+
+! enter / enter code
+? padlock
++ The padlock has already been unlocked!
+- The padlock remains locked.
 
 ! look closet / look metal closet
 ? padlock
@@ -178,7 +188,7 @@
 + The screen is now turned off. It is better so. {-tv on}
 - The screen is already turned off.
 
-! leave numérique / leave classroom
+! leave numeric / leave classroom
 + You are now in the main hall. {@🌈général}
 
 
@@ -188,22 +198,22 @@
 + A huge gathering of dogs, poneys and cats are turning their back at you.  
 
 ! caress a dog 
- - You are not close enough to do that. 
++ You are not close enough to do that. 
 
 ! approach 
- - A grid prevents you from entering.
++ A grid prevents you from entering.
 
 ! pluck face into the hole 
-  + a cat feeds you with fresh green grass 
++ a cat feeds you with fresh green grass 
 
 ! talk / say hi 
-  + they haven't seen your face yet nor you have seen theirs
++ they haven't seen your face yet nor you have seen theirs
 
 ! observe 
- + they are constantly making circles like a danse, but there's stil no way you could come across their faces.'
++ they are constantly making circles like a danse, but there's stil no way you could come across their faces.'
 
 ! bark 
- + a white poney turns over and barks at you. 
++ a white poney turns over and barks at you. 
  
 ! leave park / leave parc
 + You are now in the main hall. {@🌈général}

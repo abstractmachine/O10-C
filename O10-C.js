@@ -2,13 +2,10 @@
 const discord = require('discord.js')
 const fs = require('fs')
 const util = require('util')
+const request = require('request');
 const bot = new discord.Client()
 
-let histoire = {
-	titre: "mon histoire",
-	salons:[],
-	salonActuel: "🌈général",
-}
+let histoire = {}
 
 bot.on('ready', () => {
   console.log(`Logged in as ${bot.user.tag}!`);
@@ -23,20 +20,25 @@ bot.on('message', message => {
 	message.content = message.content.toLowerCase().trim()
 	// interprete les messages dans les channels publics type "text"
 	if (message.channel.type === "text" && message.content.startsWith('!')) {
-		
 	  message.content = message.content.substring(1).trim()
 	  parseMessage(message)
 	}
 	// répondre au direct messages
 	if (message.channel.type === "dm") {
+		if (message.content == "!update") {
+			
+			fetchHistory()	
+			message.reply("Update done!")
+			return
+		}
 		message.channel.name = histoire.salonActuel
 		parseMessage(message)
 	}
-
   })
 
 function parseMessage(message) {
-	//console.log("We are in "+ histoire.salonActuel)
+	
+	// la réponse par defaut en cas où on trouve pas de solution
 	var reply = "I'm sorry @"+message.author.username+", I'm afraid you can't do that."
 	
 	// verifier que le message est envoyé dans le salon actuel 
@@ -45,14 +47,14 @@ function parseMessage(message) {
 		// on récupère le salon actuel
 		let salon = getSalonByName(histoire.salonActuel)
 		
-		// rechercher une action correspondant au message
+		// juste au cas où le salon n'a pas d'actions définies
 		if (salon == null || !salon.hasOwnProperty("actions")) {
 			message.reply("There is nothing to do here...")
 			return
 		}
+		
+		// rechercher une action correspondant au message
 		let action = findMatchingAction(message.content, salon.actions)
-		//console.log(action)
-		// la réponse par defaut en cas où on trouve pas de solution
 		
 		
 		if (action == null) {
@@ -84,7 +86,7 @@ function parseMessage(message) {
 		message.reply(reply)
 		
 	} else {
-		message.reply("I'm in #"+ histoire.salonActuel + ". Come and join me.")
+		message.reply("I'm in #"+ histoire.salonActuel + ". Come and join me!")
 	}
 }
 
@@ -93,23 +95,29 @@ function loadText() {
     try {
         const data = fs.readFileSync('./O10-C.txt', 'utf8')
         return data
-      } catch (err) {
+	} catch (err) {
         console.error(err)
-      }
+	}
 }
 
 
 // aller chercher le fichier .txt et le transformer en commandes
-function parseText() {
+function parseText(body = null) {
+	console.log("updating")
 
-	let scenario = loadText()
+	histoire = {
+		titre: "O10-C",
+		salons:[],
+		salonActuel: "🌈général",
+	}
+
+	let scenario = body == null ? loadText() : body
 	let scenarioLines = scenario.split(/[\r\n]+/g).map(s => s.trim()).filter( e => e.length > 0) // split scenario by lines, trim and remove empty lines
 	var salon = {} // start with an empty salon object
 	var action = {}
 		
 	for (lineIndex in scenarioLines) {
 		let line = scenarioLines[lineIndex]
-		
 		
 		switch(line[0]) { // suivant le premier caractère de la ligne
 			case "#": // nouveau salon
@@ -175,8 +183,6 @@ function computeReply(reply, salon) {
 		for (i in resultSetter) {
 			let operator = resultSetter[i][1]
 			let variable = resultSetter[i][2]
-			//console.log(operator)
-			//console.log(variable)
 		
 			// 'change salon' command
 			if (operator == "@") {
@@ -214,7 +220,6 @@ function findMatchingAction(sentence, actions) {
 	// séparer la phrase en mots
 	let sentenceWords = sentence.split(/(\s+)/).filter( e => e.trim().length > 0)
 	
-	var matches = []
 	var result = null
 	var score = 0
 	for (i in actions) {
@@ -239,12 +244,22 @@ function findMatchingAction(sentence, actions) {
  			}
  		}
 	}
-	console.log(result)
+	//console.log(result)
 	return result
 }
 
+function fetchHistory() {
+	// https://hackmd.io/YXmNK5k5TdKTKhbpelbbWw/download
+	request('https://hackmd.io/YXmNK5k5TdKTKhbpelbbWw/download', function (error, response, body) {
+		console.error('error:', error); // Print the error if one occurred
+		console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
+		console.log(body)
+		parseText(body)
+		   
+   });
+}
 // démarrer le "parseur"
-parseText()
+fetchHistory()
 console.log(util.inspect(histoire, {showHidden: false, depth: null, colors: true}))
 
 bot.login('token-here')
