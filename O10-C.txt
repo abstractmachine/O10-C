@@ -1,4 +1,42 @@
+# defaults
+! *
++ I'm afraid you can do that.
++ I'm not sure about that.
++ I don't understand you fully.
+
+! take / grab / collect / pick up
++ You can't take that.
++ There is no point to do that.
+
+! look at / observe the / inspect
++ There is no interest in watching this.
++ Why would you want to do this ?
+
+! ask / demand
++ You should ask yourself about that.
+
+! fuck / asshole
++ Don't be rude. {+rudeness}
++ I'm not sure about that. {+rudeness}
+
+! sorry / apologies / apologize
+? rudeness
++ It's ok. {-rudeness}
++ Apology accepted {-rudeness}
+- Why do you need to apologize ?
+- There is nothing to be sorry for.
+
 # 🗺010-c
+
+! test that
+? !test done
++ This is a test
++ This is also a test
++ more testing
++ I can now reply from a set of random phrases {+test done}
+- And this is also possible
+- Multiple and random negative responses
+- This add a bunch of new possibilities, like games in the game {-test done}
 
 ! look / observe / hi / hello
 + Welcome to O10-C! O10-C is a fantastic textual game, where you have to explore the Art school of Aix-en-Provence via Discord. Mysteries, secrets, barking unicorns and crazy stuff await you! If you need more informations about the game, just type "!how to play" in your message. To see the credits, type "!credits". If you want to begin or continue your adventure, type "!start game" and start playing.
@@ -9,7 +47,7 @@
 ! credits / see credits
 + A game by abstractmachine, a line, flatland666, Flore G, Juste Leblanc and Velvet (have I forgotten someone?)
 
-! who / what
+! who you / what you
 + I am nothing more than an incredible, fantastic and absolutely astounding game. Please play with me, my friend!
 
 ! go to #🌈général / go to general
@@ -231,6 +269,10 @@
 ? learn how poneys bark
 + a white poney turns over and barks at you. 
 
+! give sandwich / feed sandwich / throw sandwich
+? !sandwich
++ You don't have any sandwich, but you might find one somewhere in the school.
+- You throw your sandwich in the dog park. The white unicorn catches it with its horn and runs away to eat it quietly next to the fountain in Vendome park. This good deed could help you later. {-sandwich} {+unicorn fed} 
  
 ! leave #🙀parc-à-chiens / leave park / leave parc
 + You are now in the main hall. {-fed by cat} {@🌈général}
@@ -308,8 +350,8 @@
 + The grate has been removed. The storm drain is deep and obscure.
 - This is the strom drain. It looks rather deep. A grate is protecting it.
 
-! remove grate / take grate / move grate
-? grate removed & !helped
+! remove grate / take grate / move grate / open grate
+? !grate removed & helped
 + With the help of the students, you are able to remove the grate easily. {+grate removed} {-helped}
 - The grate is heavy. You are not sure to be able to remove it by yourself without getting hurt. You might need help.
 
@@ -320,7 +362,7 @@
 
 ! enter drain / go to drain / go down
 ? grate removed
-+ Now that the grate is removed, you can go down into the darkness below, deep inside the storm drain… After going down for a moment into the darkness, you finally perceive a glimmer of light. As you approach the light, you discover a very strange room… {@🧙♀le-petit-coin-sorcellerie}
++ Now that the grate is removed, you can go down into the darkness below, deep inside the storm drain… After going down for a moment into the darkness, you finally perceive a glimmer of light. As you approach the light, you discover a very strange room… {@🧙♀le-petit-coin-sorcellerie} {+candles lit}
 - The grate prevents you from going down.
 
 ! go to
@@ -329,7 +371,7 @@
 ! go to villa / go to #🏡villa
 + You leave the courtyard and go to the villa. {@🏡villa}
 
-! go to numeric / go to #💾numérique
+! go to numeric / go to #💾numérique / go to numérique
 ? visited numeric
 + You are going in the numeric classroom, once again. {@💾numérique}
 - You are going in the numeric classroom. {+visited numeric} {@💾numérique}
@@ -367,6 +409,9 @@
 # 🙈a3
 ! when diploma
 + Ha ha ha ha ha ha ha! I have no idea. Seriously. Good luck with this shit.
+
+! pass diploma
++ You easily pass your diploma since there is no real exam this year thanks to the 🦠, you are now officially a fourth year student. {+A4}
 
 # 🙉a4
 
