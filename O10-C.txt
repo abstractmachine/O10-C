@@ -1,19 +1,37 @@
+# 🗺010-c
+
+! look / observe / hi / hello
++ Welcome to O10-C! O10-C is a fantastic textual game, where you have to explore the Art school of Aix-en-Provence via Discord. Mysteries, secrets, barking unicorns and crazy stuff await you! If you need more informations about the game, just type "!how to play" in your message. To see the credits, type "!credits". If you want to begin or continue your adventure, type "!start game" and start playing.
+
+! how to play / how game / how to
++ Playing this game is rather simple. Every single action related to this game has to be typed with a "!" first. What comes next should be a verb, like "! look". Generally, your verb should be followed by a noun. For example : "! take clothes", "! open door", "! go to #🌈général"… A few verbs are frequently usable, such as "take", "look", "go to", "leave", "say", "enter", "inspect"… And the rest is up to you!
+
+! credits / see credits
++ A game by abstractmachine, a line, flatland666, Flore G, Juste Leblanc and Velvet (have I forgotten someone?)
+
+! who / what
++ I am nothing more than an incredible, fantastic and absolutely astounding game. Please play with me, my friend!
+
+! go to #🌈général / go to general
++ Let's go! Join me in #🌈général channel. {@🌈général}
+
+! start / play / go cour
++ Let's go! Join me in #🚬la-cour! {@🚬la-cour}
+
 # 🌈général
 
-! look
-+ You are in the school entrance hall, from here you can go to the toilets, the numeric classroom and the dog park (for now).
+! look / observe
++ You are in the school entrance hall, from here you can go to the toilets, the courtyard and the dog park (for now).
 
-! go toilets / enter toilets
+! go toilets / enter toilets / go #💩toilettes / enter #💩toilettes
 ? toilets
-+ You are going back to the toilets {@💩toilettes} {+hands clean}
-- You are now in the toilets {+toilets} {@💩toilettes} {+hands clean}
++ You are going back to the toilets {@💩toilettes} {-hands clean}
+- You are now in the toilets {+toilets} {@💩toilettes} {-hands clean}
 
-! go numeric / enter numeric
-? numeric
-+ You are now in the numeric classroom, once again. {@💾numérique}
-- You are now in the numeric classroom {+numeric} {@💾numérique}
+! go to courtyard / go to #🚬la-cour
++ You are now in the courtyard. {@🚬la-cour}
 
-! go dog park / enter dog park / go parc chiens / enter parc chiens
+! go dog park / enter dog park / go parc chiens / enter parc chiens / go #🙀parc-à-chiens / enter #🙀parc-à-chiens
 ? dog park
 + You are going back to the dog park  {@🙀parc-à-chiens}
 - You are now in front of the dog park  {+dog park} {@🙀parc-à-chiens}
@@ -23,12 +41,15 @@
 ! look / observe
 + Detecting your presence, the lights turn on by themselves. There's a sink, a hand dryer, a trash can full of paper, a mirror, and freshly paint red door.
 
+! take
++ What are you trying to take?
+
 ! inspect mirror / see mirror
 ? having shit
 + You are currently sitting on the toilets.
 - Looking in the mirror, you can see your own face. It might be a good place to put on make-up quickly.
 
-! put on make-up / wear make-up / put on makeup
+! put on make-up / wear make-up / put on makeup / wear make up
 ? makeup kit
 + Using the mirror, you put on your make-up properly. You feel beautiful, and somewhat stronger now. {+made up}
 - Unfortunately, you don't have any make-up kit.
@@ -45,8 +66,11 @@
 
 ! sit down / take a piss / take a shit
 ? pants down & red door
-+ As you gently sit down and sigh in relief, you can't help but notice some irregularities on the red door in front of you. It seems there were drawings and signatures of all kind on this door, before it was painted red. {+having shit}
++ As you gently sit down and sigh in relief, you can't help but notice some irregularities on the red door in front of you. It seems there were drawings and signatures of all kind on this door, before it was painted red. Could it be removable? {+having shit}
 - You can't do that without taking off your pants first, can you?
+
+! look red door / look door
++ You notice some irregularities on the red door in front of you. It seems there were drawings and signatures of all kind on this door, before it was painted red.
 
 ! take off pants / remove pants
 ? pants down
@@ -61,11 +85,11 @@
 ! get up / stop shit / stop piss / end shit / finish shit
 ? having shit
 + I hope you had a good time. {-having shit}
-- You are already standing up.
+- You are currently not having a shit… Are you?
 
-! put pants on / pull pants up / take pants
+! put pants on / pull pants up / take pants / wear pants
 ? pants down
-+ You put your pants on. {-pants down}
++ You put your pants on. {-pants down} {-having shit}
 - Your pants are already on!
 
 ! inspect trash can / see trash can / see trash
@@ -79,7 +103,7 @@
 + You have taken the frog-shaped USB from the trash can.
 - You can't see any USB device in here.
 
-! wash hands / wash hand
+! wash hands / wash hand / clean hands / clean hand
 ? having shit
 + You can't do that yet: you are taking a shit.
 - Washing your hands sure is a good idea! {+hands washed}
@@ -89,7 +113,7 @@
 + Now, your hands are REALLY clean and dry. Well done! {+hands clean} {-hands washed}
 - Drying your hands without washing them first?  Odd.
 
-! leave / go back / leave toilets
+! leave / go back / leave toilets / leave #💩toilettes
 ? hands clean & !having shit
 + You leave the restroom, proud of yourself for being able to wash your hands properly. {@🌈général}
 - You leave the restroom, crushed by the guilt of not washing your hands properly. You really feel like a disgusting pig. {@🌈général}
@@ -122,33 +146,33 @@
 
 ! look closet / look metal closet
 ? padlock
-+ The closet is locked down. It seems you need to enter a 4-numbers password to open it.
-- Inside the closet, you can see some laptop computers, Ipads, gaming gear and pink paper.
++ Inside the closet, you can see some laptop computers, Ipads, gaming gear and pink paper.
+- The closet is locked down. It seems you need to enter a 4-numbers password to open it.
 
 ! lock padlock / lock closet / lock metal closet
 ? padlock
-+ The metal closet is already locked down.
-- You have closed and locked down the closet.
++ You have closed and locked down the closet.
+- The metal closet is already locked down.
 
 ! take computer / take laptop
 ? padlock
-+ There is no laptop to be taken.
-- You have taken a laptop computer from the closet. {+laptop}
++ You have taken a laptop computer from the closet. {+laptop}
+- There is no laptop to be taken.
 
 ! take ipad
 ? padlock
-+ There is no ipad to be taken.
-- You have taken an ipad from the closet. {+ipad}
++ You have taken an ipad from the closet. {+ipad}
+- There is no ipad to be taken.
 
 ! take paper
 ? padlock
-+ You have taken a regular white piece of paper from the table. {+white paper}
-- You have taken a flashy and stylish pink piece of paper from the closet. {+pink paper}
++ You have taken a flashy and stylish pink piece of paper from the closet. {+pink paper}
+- You have taken a regular white piece of paper from the table. {+white paper}
 
 ! take game gear / take gamepad
 ? padlock
-+ There is no gamepad to be taken here.
-- You have taken a gamepad from the closet. {+gamepad}
++ You have taken a gamepad from the closet. {+gamepad}
+- There is no gamepad to be taken here.
 
 ! look arcade machine / look arcade
 + You are in front of an arcade machine. Even though there's some rust to it, the buttons look new.
@@ -158,7 +182,7 @@
 + The arcade machine is already lit.
 - As you boot up the machine, the screen flickers. A whole bunch of terminal lines and informations you cannot comprehend scrolls before your amazed eyes, on the screen. After a few dozen of seconds, the arcade machine appears to be finally ready {+arcade lit}.
 
-! play zork / play zork I
+! play
 ? arcade lit
 + You play Zork I. Playing a text game inside a text game sounds really funny.
 - You can't do that, as the arcade machine is turned off.
@@ -188,33 +212,164 @@
 + The screen is now turned off. It is better so. {-tv on}
 - The screen is already turned off.
 
-! leave numeric / leave classroom
-+ You are now in the main hall. {@🌈général}
+! leave #💾numérique / leave numeric / leave classroom / go to courtyard / go to cour
++ You are now in the main hall. {@🚬la-cour}
 
 
 # 🙀parc-à-chiens
 
 ! look / observe
-+ A huge gathering of dogs, poneys and cats are turning their back at you.  
+? Eyes meet
++ The park is surrounded by a grid that prevents you from entering. You can see a bunch of dogs and cats gathered together. They are constantly making circles like a dance.
 
-! caress a dog 
-+ You are not close enough to do that. 
-
-! approach 
-+ A grid prevents you from entering.
-
-! pluck face into the hole 
-+ a cat feeds you with fresh green grass 
-
-! talk / say hi 
-+ they haven't seen your face yet nor you have seen theirs
-
-! observe 
-+ they are constantly making circles like a danse, but there's stil no way you could come across their faces.'
+! pluck face into hole / face hole
+? fed by cat
++ A cat has already fed you with green grass sooner. The cat is gone, now.
+- A cat feeds you with fresh green grass {+fed by cat}
 
 ! bark 
+? learn how poneys bark
 + a white poney turns over and barks at you. 
- 
-! leave park / leave parc
-+ You are now in the main hall. {@🌈général}
 
+ 
+! leave #🙀parc-à-chiens / leave park / leave parc
++ You are now in the main hall. {-fed by cat} {@🌈général}
+
+
+# 🍽cafète
+! take glass
++ You have a glass {+glass taken}
+
+! drop glass / put back glass
++ You put the glass back in its place {-glass taken}
+
+! take itchy sponge / take old sponge / take sponge
+? itchy sponge
++ You already have the itchy sponge.
+- You have taken the itchy sponge. It's still wet, and a little bit stinky, but hey… It can be useful, somehow. {+itchy sponge}
+
+ 
+! leave #🍽cafète/ leave cafet / leave cafeteria
+? glass taken
++ You can't leave the cafeteria with a glass! It's too dangerous!
+- You are now in the main hall. {@🌈général}
+
+
+# 🥑bbq
+
+! look / observe
++ There's a rusted bbq. Food is frying. A lot of people are chatting around, some of them have sandwiches. There's also a large table on which you can see some crisps, bread, salad, tomatoes, fried sausages and fried vegetables.
+
+! say hi / say hello / say bonjour / say coucou
++ As you say "hi", some people answer with hearty smiles.
+
+! talk / chat
++ You really want to chat… but you can't think of anything to talk about right now.
+
+! make sandwich / take sandwich / take food / prepare sandwich
+? sandwich
++ You are already holding a sandwich. You are really voracious, aren't you?
+- The smell of food is way too tempting. You get close to the table and start picking food to put in your sandwich. After a few meticulous choices, you end up with a beautiful and appetizing sandwich. It almost feels like art. {+sandwich}
+
+! eat sandwich / bite sandwich
+? sandwich
++ You can't hold it anymore. The sandwich is in your hands, and you decide to eat it. The sandwich tastes great. It's marvellous! {-sandwich}
+- … But you don't have any sandwich.
+
+! go to
++ From here, you can only go to #🚬la-cour…
+
+! leave / go back / go to courtyard / go to #🚬la-cour
++ You finally decide to leave the BBQ for now. {@🚬la-cour}
+
+# 🎨galerie
+
+
+# 🏡villa
+
+! look / observe
++ please complete me
+
+! complete
++ I was talking to my programers.
+
+! leave / go back / go to cour
++ You finally decide to leave the villa, going back to the courtyard. {@🚬la-cour}
+
+# 🎬ciné-club
+
+# 🚬la-cour
+
+! look / observe
++ This is the courtyard of the school. A good amount of people are gathered around a flaming BBQ. Some of them are playing, some of them are chatting, some of them are eating. On the ground, there's a grate protecting the storm drain. {-helped}
+
+! see grate / look grate / see drain / look drain
+? grate removed
++ The grate has been removed. The storm drain is deep and obscure.
+- This is the strom drain. It looks rather deep. A grate is protecting it.
+
+! remove grate / take grate / move grate
+? grate removed & !helped
++ With the help of the students, you are able to remove the grate easily. {+grate removed} {-helped}
+- The grate is heavy. You are not sure to be able to remove it by yourself without getting hurt. You might need help.
+
+! ask help / call help / please help
+? helped
++ Someone is already helping you.
+- You ask some help to nearby people. Some of the students offer you some help. {+helped}
+
+! enter drain / go to drain / go down
+? grate removed
++ Now that the grate is removed, you can go down into the darkness below, deep inside the storm drain… After going down for a moment into the darkness, you finally perceive a glimmer of light. As you approach the light, you discover a very strange room… {@🧙♀le-petit-coin-sorcellerie}
+- The grate prevents you from going down.
+
+! go to
++ From the courtyard, it is possible to go to #💾numérique, #🥑bbq, #🏡villa or #🌈général.
+
+! go to villa / go to #🏡villa
++ You leave the courtyard and go to the villa. {@🏡villa}
+
+! go to numeric / go to #💾numérique
+? visited numeric
++ You are going in the numeric classroom, once again. {@💾numérique}
+- You are going in the numeric classroom. {+visited numeric} {@💾numérique}
+
+! go to bbq / go to grill / approach bbq / go to #🥑bbq
++ The smell of food attracts you… {@🥑bbq}
+
+! go to general / go to #🌈général / go back
++ You are going back to #🌈général. {@🌈général}
+
+# 🧙♀le-petit-coin-sorcellerie
+
+! look / observe
++ You are inside of a strange room. Everything is yet to be written
+
+! leave / go back
++ You decide to go back to where you came from. {@🚬la-cour}
+
+# 🤖mécatronique
+
+# 🔩métal
+
+# 🧤bois
+
+# ✏dessin
+
+# 🕸web
+
+# 🤪blagues-memes-et-devinettes
+
+# 🐒a1
+
+# 🐵a2
+
+# 🙈a3
+! when diploma
++ Ha ha ha ha ha ha ha! I have no idea. Seriously. Good luck with this shit.
+
+# 🙉a4
+
+# 🙊a5
+
+# 🕷sous-sol

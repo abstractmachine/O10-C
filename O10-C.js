@@ -26,7 +26,6 @@ bot.on('message', message => {
 	// répondre au direct messages
 	if (message.channel.type === "dm") {
 		if (message.content == "!update") {
-			
 			fetchHistory()	
 			message.reply("Update done!")
 			return
@@ -37,13 +36,11 @@ bot.on('message', message => {
   })
 
 function parseMessage(message) {
-	
 	// la réponse par defaut en cas où on trouve pas de solution
 	var reply = "I'm sorry @"+message.author.username+", I'm afraid you can't do that."
 	
 	// verifier que le message est envoyé dans le salon actuel 
 	if (message.channel.name == histoire.salonActuel) {
-		
 		// on récupère le salon actuel
 		let salon = getSalonByName(histoire.salonActuel)
 		
@@ -56,7 +53,6 @@ function parseMessage(message) {
 		// rechercher une action correspondant au message
 		let action = findMatchingAction(message.content, salon.actions)
 		
-		
 		if (action == null) {
 			// répondre sorry si aucune action trouvée
 			message.reply(reply)
@@ -66,7 +62,6 @@ function parseMessage(message) {
 		if (action.conditions != null) {
 			// la réponse est soumise a condition
 			var ok = true
-			
 			for (condition in action.conditions) {
 				//console.log(salon.etats[condition] +" -> " +action.conditions[condition] )
 				if (salon.etats[condition] != action.conditions[condition]) {
@@ -82,37 +77,33 @@ function parseMessage(message) {
 			// no condition, reply with default reaction
 			reply = computeReply(action.reaction, salon)
 		}
-		
 		message.reply(reply)
-		
 	} else {
+		console.log("outside code")
 		message.reply("I'm in #"+ histoire.salonActuel + ". Come and join me!")
 	}
 }
 
 // interpreter le script O10-C.txt
-function loadText() {
+function loadSettings() {
     try {
-        const data = fs.readFileSync('./O10-C.txt', 'utf8')
-        return data
+		const data = fs.readFileSync('./settings.json', 'utf8')
+		settings = JSON.parse(data);
+        return settings
 	} catch (err) {
         console.error(err)
 	}
 }
 
-
 // aller chercher le fichier .txt et le transformer en commandes
-function parseText(body = null) {
-	console.log("updating")
-
+function parseStory(souce) {
 	histoire = {
 		titre: "O10-C",
 		salons:[],
-		salonActuel: "🌈général",
+		salonActuel: null,
 	}
 
-	let scenario = body == null ? loadText() : body
-	let scenarioLines = scenario.split(/[\r\n]+/g).map(s => s.trim()).filter( e => e.length > 0) // split scenario by lines, trim and remove empty lines
+	let scenarioLines = souce.split(/[\r\n]+/g).map(s => s.trim()).filter( e => e.length > 0) // split scenario by lines, trim and remove empty lines
 	var salon = {} // start with an empty salon object
 	var action = {}
 		
@@ -121,7 +112,6 @@ function parseText(body = null) {
 		
 		switch(line[0]) { // suivant le premier caractère de la ligne
 			case "#": // nouveau salon
-			
 				let nomSalon = line.substr(1).trim()
 				
 				// créer un nouvel objet salon avec son nom
@@ -172,6 +162,9 @@ function parseText(body = null) {
 				break;
 		}
 	}	
+	histoire.salonActuel = histoire.salons[0].titre
+	console.log(util.inspect(histoire, {showHidden: false, depth: null, colors: true}))
+
 }
 
 // check for state setter in reply 
@@ -183,20 +176,17 @@ function computeReply(reply, salon) {
 		for (i in resultSetter) {
 			let operator = resultSetter[i][1]
 			let variable = resultSetter[i][2]
-		
 			// 'change salon' command
 			if (operator == "@") {
 				histoire.salonActuel = variable
 				salon = getSalonByName(variable)
 				console.log("We are now in "+histoire.salonActuel)
-				//console.log(util.inspect(salon, {showHidden: false, depth: null, colors: true}))
 
 			} else {
 				// salon state setter
 				salon.etats[variable] = operator == "+" ? true : false
 			}		
 		}
-		
 		console.log(salon.etats)
 		return reply.replace(regexSetter, "")
 	}
@@ -223,19 +213,15 @@ function findMatchingAction(sentence, actions) {
 	var result = null
 	var score = 0
 	for (i in actions) {
-		
 		let commandes = actions[i].commandes
-
  		for (j in commandes) {
  			// séparer la commande par mots
  			let commandParts = commandes[j].split(/(\s+)/).map(s => s.trim()).filter( e => e.length > 0)
- 		
  			// https://stackoverflow.com/questions/1187518/how-to-get-the-difference-between-two-arrays-in-javascript
  			let intersection = sentenceWords.filter(x => commandParts.includes(x))
  			
  			// command match action 
  			if (intersection.length == commandParts.length) {
- 				
  				// set only if matching score is higher than previous match
  				if (score <= intersection.length) {
 					result = actions[i]
@@ -244,22 +230,26 @@ function findMatchingAction(sentence, actions) {
  			}
  		}
 	}
-	//console.log(result)
 	return result
 }
-
-function fetchHistory() {
-	// https://hackmd.io/YXmNK5k5TdKTKhbpelbbWw/download
-	request('https://hackmd.io/YXmNK5k5TdKTKhbpelbbWw/download', function (error, response, body) {
+// interpreter le script O10-C.txt
+function loadHistory() {
+    try {
+        const data = fs.readFileSync('./O10-C.txt', 'utf8')
+        return data
+	} catch (err) {
+        console.error(err)
+	}
+}
+//  update history from an url
+function fetchHistory(url) {
+	request(url, function (error, response, body) {
 		console.error('error:', error); // Print the error if one occurred
 		console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
-		console.log(body)
-		parseText(body)
-		   
+		parseStory(body)   
    });
 }
 // démarrer le "parseur"
-fetchHistory()
-console.log(util.inspect(histoire, {showHidden: false, depth: null, colors: true}))
-
-bot.login('token-here')
+let seetings = loadSettings()
+fetchHistory(settings.historyUrl)
+bot.login(settings.discordToken)
