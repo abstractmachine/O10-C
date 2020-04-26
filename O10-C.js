@@ -5,7 +5,7 @@ const util = require('util')
 const request = require('request');
 const bot = new discord.Client()
 
-let histoire = {}
+let story = {}
 
 bot.on('ready', () => {
   console.log(`Logged in as ${bot.user.tag}!`);
@@ -30,96 +30,97 @@ bot.on('message', message => {
 			message.reply("Update done!")
 			return
 		}
-		message.channel.name = histoire.salonActuel
+		message.channel.name = story.currentPlace
 		parseMessage(message)
 	}
 })
 
 function parseMessage(message) {
-	// la réponse par defaut en cas où on trouve pas de solution
-	var reply = "I'm sorry @"+message.author.username+", I'm afraid you can't do that."
 	
-	// verifier que le message est envoyé dans le salon actuel 
-	if (message.channel.name == histoire.salonActuel) {
-		// on récupère le salon actuel
-		let salon = getSalonByName(histoire.salonActuel)
+	// verifier que le message est envoyé dans le place actuel 
+	if (message.channel.name == story.currentPlace) {
+		var reply = null
+		// on récupère le place actuel
+		let place = getPlaceByName(story.currentPlace)
 		
 		// juste au cas où le salon n'a pas d'actions définies
-		if (salon == null || !salon.hasOwnProperty("actions")) {
+		if (place == null || !place.hasOwnProperty("actions")) {
 			message.reply("There is nothing to do here...")
 			return
 		}
-		// rechercher une action correspondant au message
-		let action = findMatchingAction(message.content, salon.actions)
+		// rechercher une action correspondant au message dans le salon actuel
+		let action = findMatchingAction(message.content, place.actions)
 		
+		// si aucune action trouvée, faire une recherche dans les reponses par default
 		if (action == null) {
-			// répondre sorry si aucune action trouvée
-			message.reply(reply)
-			return
+			action = findMatchingAction(message.content, story.defaults.actions)
+		}
+		// si aucune action par defaut trouvée, repondre par la reponse catch all
+		if (action == null) {
+			action = findMatchingAction("*", story.defaults.actions)
 		}
 			
 		if (action.conditions != null) {
 			// la réponse est soumise a condition
 			var ok = true
 			for (condition in action.conditions) {
-				//console.log(salon.etats[condition] +" -> " +action.conditions[condition] )
-				if (histoire.etats[condition] != action.conditions[condition]) {
+				//console.log(place.states[condition] +" -> " +action.conditions[condition] )
+				if (story.states[condition] != action.conditions[condition]) {
 					// the condition is not reached
 					ok = false
 					break;
 				}
 			}
-			reply = ok ? action.reaction : action.objection
+			reply = ok ? action.reaction() : action.objection()
 			reply = computeReply(reply)		
 		} else {
 			// no condition, reply with default reaction
-			reply = computeReply(action.reaction)
+			reply = computeReply(action.reaction())
 		}
 		
-
 		if (message.channel.type === "text") {
-			let channel = message.guild.channels.cache.find(ch => ch.name === histoire.salonActuel)
+			let channel = message.guild.channels.cache.find(ch => ch.name === story.currentPlace)
 			message.channel.name
 		}
 		//console.log(message)
 		message.reply(reply)
 
 		// sin on a changé de salon, envoyer un 'look' depuis ce nouveau salon en mentionant l'utilisateur
-		if (salon != getSalonByName(histoire.salonActuel)) {
-			salon = getSalonByName(histoire.salonActuel)
-			let look = findMatchingAction("look",salon.actions)
+		if (place != getPlaceByName(story.currentPlace)) {
+			place = getPlaceByName(story.currentPlace)
+			let look = findMatchingAction("look",place.actions)
 			if (look != null && message.channel.type === "text") {
 				// s'il s'agit d'un message emit d'un salon, trouver l'id du salon discord
-				let channel = message.guild.channels.cache.find(ch => ch.name === histoire.salonActuel)
-				if (channel != null) channel.send("<@" + message.author.id + "> "+ computeReply(look.reaction))
-			} else message.reply("<@" + message.author.id + "> "+ computeReply(look.reaction))
+				let channel = message.guild.channels.cache.find(ch => ch.name === story.currentPlace)
+				if (channel != null) channel.send("<@" + message.author.id + "> "+ computeReply(look.reaction()))
+			} else message.reply("<@" + message.author.id + "> "+ computeReply(look.reaction()))
 		}
 	} else {
 		console.log("outside call")
 		if (message.channel.type === "text") {
-			let channel = message.guild.channels.cache.find(ch => ch.name === histoire.salonActuel)
+			let channel = message.guild.channels.cache.find(ch => ch.name === story.currentPlace)
 			message.reply("I'm in <#"+ channel.id + ">. Come and join me!")
 		} 
-		
 	}
 }
 
 // check for state setter in reply 
 function computeReply(reply) {
+	console.log(reply)
 	let regexSetter = /{\s*(@|\+|-)\s*([^}\n\r]*)}/gm
 	let resultSetter = [...reply.matchAll(regexSetter)]
 
 	for (result of resultSetter) {
 		let operator = result[1]
 		let variable = result[2]
-		// 'change salon' command
+		// 'change place' command
 		if (operator == "@") {
-			histoire.salonActuel = variable
-			console.log("We are now in "+histoire.salonActuel)
+			story.currentPlace = variable
+			console.log("We are now in "+story.currentPlace)
 		} else {
-			// salon state setter
-			histoire.etats[variable] = operator == "+" ? true : false
-			console.log(histoire.etats)
+			// place state setter
+			story.states[variable] = operator == "+" ? true : false
+			console.log(story.states)
 		}		
 	}
 	return reply.replace(regexSetter, "")
@@ -127,15 +128,16 @@ function computeReply(reply) {
 
 // aller chercher le fichier .txt et le transformer en commandes
 function parseStory(source) {
-	histoire = {
-		titre: "O10-C",
-		salons:[],
-		salonActuel: null,
-		etats: {}
+	story = {
+		title: "O10-C",
+		places:[],
+		defaults: null,
+		currentPlace: null,
+		states: {}
 	}
 
 	let scenarioLines = source.split(/[\r\n]+/g).map(s => s.trim()).filter( e => e.length > 0) // split scenario by lines, trim and remove empty lines
-	var salon = {} // start with an empty salon object
+	var place = {} // start with an empty place object
 	var action = {}
 		
 	for (lineIndex in scenarioLines) {
@@ -143,27 +145,38 @@ function parseStory(source) {
 		
 		switch(line[0]) { // suivant le premier caractère de la ligne
 			case "#": // nouveau salon
-				let nomSalon = line.substr(1).trim()
+				let placeName = line.substr(1).trim()
 				
-				// créer un nouvel objet salon avec son nom
-				salon = {
-					titre: nomSalon,
+				// créer un nouvel objet place avec son nom
+				place = {
+					name: placeName,
 					actions: []
 					}
-				histoire.salons.push(salon) // add the new salon to the story
-				break;
-				
-			case "!": // action(s) du salon
+				// check for defaults 
+				if (placeName == "defaults") {
+					story.defaults = place
+				} else story.places.push(place) // add the new place to the story
+				break;	
+			case "!": // action(s) du place
 				let regexActions = /!\s*(.*)/ // trouver toutes les actions et synonymes : !fait ci / fait ça / fait quoi
 				let allCommands = line.match(regexActions)[1]
 				let commands = allCommands.split(/\//g).map(s => s.trim()).filter( e => e.length > 0)// séparer les actions par /
 				
-				action = {commandes:commands,
-						  conditions: null}
-				
-				salon.actions.push(action) // ajouter la liste d'actions synonymes au salon
+				action = {commands:commands,
+						  conditions: null,
+						  reactions: [],
+						  objections: []
+						}
+				// random getters and setters of reactions and objections
+				action.reaction = function() {
+					return this.reactions[Math.floor(Math.random() * this.reactions.length)]
+				}
+				action.objection = function() {
+					return this.objections[Math.floor(Math.random() * this.objections.length)]
+				}
+
+				place.actions.push(action) // ajouter la liste d'actions synonymes au place
 				break;
-				
 			case "?": // condition de réaction
 				let allconditions = line.substr(1).trim()
 				let conditionList = allconditions.split(/\&/g).map(s => s.trim()).filter( e => e.length > 0)// séparer les conditions par &
@@ -171,40 +184,38 @@ function parseStory(source) {
 				for (condition of conditionList) {
 					if (condition[0]=="!") {
 						conditions[condition.substr(1).trim()] = false // negative condition
-						histoire.etats[condition.substr(1).trim()] = false // ajouter la variable au salon
+						story.states[condition.substr(1).trim()] = false // ajouter la variable au place
 					} else {
 						conditions[condition] = true // positive condition
-						histoire.etats[condition] = false // ajouter la variable au salon
+						story.states[condition] = false // ajouter la variable au place
 					}
 				}
 				action.conditions = conditions
-				break;
-				
+				break;	
 			case "+": // pro condition 
 				let positiveResponse = line.substr(1).trim()
-				action.reaction = positiveResponse
+				action.reactions.push(positiveResponse)
 				break;
-				
 			case "-": // non condition
 				let negativeResponse = line.substr(1).trim()
-				action.objection = negativeResponse
+				action.objections.push(negativeResponse)
 				break;
 		}
 	}	
-	histoire.salonActuel = histoire.salons[0].titre
-	console.log(util.inspect(histoire, {showHidden: false, depth: null, colors: true}))
+	story.currentPlace = story.places[0].name
+	//console.log(util.inspect(story, {showHidden: false, depth: null, colors: true}))
 
 }
 
-// find a salon by name in 'histoire' 
-function getSalonByName(salonName) {
-	for (salon of histoire.salons) {
-		if (salon.titre == salonName) {
-			return salon
+// find a place by name in 'story' 
+function getPlaceByName(placeName) {
+	for (place of story.places) {
+		if (place.name == placeName) {
+			return place
 		}
 	}
-	console.log("no salon named " + salonName)
-	// no salon with that name, return null
+	console.log("no place named " + placeName)
+	// no place with that name, return null
 	return null
 }
 
@@ -216,10 +227,10 @@ function findMatchingAction(sentence, actions) {
 	var result = null
 	var score = 0
 	for (i in actions) {
-		let commandes = actions[i].commandes
- 		for (j in commandes) {
+		let commands = actions[i].commands
+ 		for (j in commands) {
  			// séparer la commande par mots
- 			let commandParts = commandes[j].split(/(\s+)/).map(s => s.trim()).filter( e => e.length > 0)
+ 			let commandParts = commands[j].split(/(\s+)/).map(s => s.trim()).filter( e => e.length > 0)
  			// https://stackoverflow.com/questions/1187518/how-to-get-the-difference-between-two-arrays-in-javascript
  			let intersection = sentenceWords.filter(x => commandParts.includes(x))
  			
@@ -236,21 +247,31 @@ function findMatchingAction(sentence, actions) {
 	return result
 }
 // interpreter le script O10-C.txt
-function loadStory() {
+function loadStoryFromFile(path) {
     try {
-        const data = fs.readFileSync('./O10-C.txt', 'utf8')
+        const data = fs.readFileSync('./'+path, 'utf8')
         return data
 	} catch (err) {
         console.error(err)
 	}
 }
-//  update history from an url
+//  update history from source
 function fetchStory(url) {
-	request(url, function (error, response, body) {
-		console.error('error:', error); // Print the error if one occurred
-		console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
-		parseStory(body)   
-   });
+	try {
+		let storyUrl = new URL(url)
+		if (url.protocol == "file:") { // fetch story from local file
+			let body = loadStoryFromFile(url.hostname)
+			parseStory(body)
+		} else { // fetch story from remote server
+			request(url, function (error, response, body) {
+				console.error('error:', error); // Print the error if one occurred
+				console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
+				parseStory(body)   
+			})
+		}
+	} catch (e) {
+		console.log(e.message)
+	}
 }
 
 // lire le fichier settings.json
