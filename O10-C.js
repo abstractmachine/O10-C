@@ -24,16 +24,16 @@ bot.on('message', message => {
 	  parseMessage(message)
 	}
 	// répondre au direct messages
-	if (message.channel.type === "dm") {
+	if (settings.directMessageMode && message.channel.type === "dm") {
 		if (message.content == "!update") {
-			fetchHistory()	
+			fetchStory(settings.storyUrl)	
 			message.reply("Update done!")
 			return
 		}
 		message.channel.name = histoire.salonActuel
 		parseMessage(message)
 	}
-  })
+})
 
 function parseMessage(message) {
 	// la réponse par defaut en cas où on trouve pas de solution
@@ -49,7 +49,6 @@ function parseMessage(message) {
 			message.reply("There is nothing to do here...")
 			return
 		}
-		
 		// rechercher une action correspondant au message
 		let action = findMatchingAction(message.content, salon.actions)
 		
@@ -64,46 +63,78 @@ function parseMessage(message) {
 			var ok = true
 			for (condition in action.conditions) {
 				//console.log(salon.etats[condition] +" -> " +action.conditions[condition] )
-				if (salon.etats[condition] != action.conditions[condition]) {
+				if (histoire.etats[condition] != action.conditions[condition]) {
 					// the condition is not reached
 					ok = false
 					break;
 				}
 			}
 			reply = ok ? action.reaction : action.objection
-			reply = computeReply(reply, salon)
-						
+			reply = computeReply(reply)		
 		} else {
 			// no condition, reply with default reaction
-			reply = computeReply(action.reaction, salon)
+			reply = computeReply(action.reaction)
 		}
+		
+
+		if (message.channel.type === "text") {
+			let channel = message.guild.channels.cache.find(ch => ch.name === histoire.salonActuel)
+			message.channel.name
+		}
+		//console.log(message)
 		message.reply(reply)
+
+		// sin on a changé de salon, envoyer un 'look' depuis ce nouveau salon en mentionant l'utilisateur
+		if (salon != getSalonByName(histoire.salonActuel)) {
+			salon = getSalonByName(histoire.salonActuel)
+			let look = findMatchingAction("look",salon.actions)
+			if (look != null && message.channel.type === "text") {
+				// s'il s'agit d'un message emit d'un salon, trouver l'id du salon discord
+				let channel = message.guild.channels.cache.find(ch => ch.name === histoire.salonActuel)
+				if (channel != null) channel.send("<@" + message.author.id + "> "+ computeReply(look.reaction))
+			} else message.reply("<@" + message.author.id + "> "+ computeReply(look.reaction))
+		}
 	} else {
-		console.log("outside code")
-		message.reply("I'm in #"+ histoire.salonActuel + ". Come and join me!")
+		console.log("outside call")
+		if (message.channel.type === "text") {
+			let channel = message.guild.channels.cache.find(ch => ch.name === histoire.salonActuel)
+			message.reply("I'm in <#"+ channel.id + ">. Come and join me!")
+		} 
+		
 	}
 }
 
-// interpreter le script O10-C.txt
-function loadSettings() {
-    try {
-		const data = fs.readFileSync('./settings.json', 'utf8')
-		settings = JSON.parse(data);
-        return settings
-	} catch (err) {
-        console.error(err)
+// check for state setter in reply 
+function computeReply(reply) {
+	let regexSetter = /{\s*(@|\+|-)\s*([^}\n\r]*)}/gm
+	let resultSetter = [...reply.matchAll(regexSetter)]
+
+	for (result of resultSetter) {
+		let operator = result[1]
+		let variable = result[2]
+		// 'change salon' command
+		if (operator == "@") {
+			histoire.salonActuel = variable
+			console.log("We are now in "+histoire.salonActuel)
+		} else {
+			// salon state setter
+			histoire.etats[variable] = operator == "+" ? true : false
+			console.log(histoire.etats)
+		}		
 	}
+	return reply.replace(regexSetter, "")
 }
 
 // aller chercher le fichier .txt et le transformer en commandes
-function parseStory(souce) {
+function parseStory(source) {
 	histoire = {
 		titre: "O10-C",
 		salons:[],
 		salonActuel: null,
+		etats: {}
 	}
 
-	let scenarioLines = souce.split(/[\r\n]+/g).map(s => s.trim()).filter( e => e.length > 0) // split scenario by lines, trim and remove empty lines
+	let scenarioLines = source.split(/[\r\n]+/g).map(s => s.trim()).filter( e => e.length > 0) // split scenario by lines, trim and remove empty lines
 	var salon = {} // start with an empty salon object
 	var action = {}
 		
@@ -117,8 +148,7 @@ function parseStory(souce) {
 				// créer un nouvel objet salon avec son nom
 				salon = {
 					titre: nomSalon,
-					actions: [],
-					etats: {}
+					actions: []
 					}
 				histoire.salons.push(salon) // add the new salon to the story
 				break;
@@ -138,14 +168,13 @@ function parseStory(souce) {
 				let allconditions = line.substr(1).trim()
 				let conditionList = allconditions.split(/\&/g).map(s => s.trim()).filter( e => e.length > 0)// séparer les conditions par &
 				let conditions = {}
-				for (i in conditionList) {
-					
-					if (conditionList[i][0]=="!") {
-						conditions[conditionList[i].substr(1).trim()] = false // negative condition
-						salon.etats[conditionList[i].substr(1).trim()] = false // ajouter la variable au salon
+				for (condition of conditionList) {
+					if (condition[0]=="!") {
+						conditions[condition.substr(1).trim()] = false // negative condition
+						histoire.etats[condition.substr(1).trim()] = false // ajouter la variable au salon
 					} else {
-						conditions[conditionList[i]] = true // positive condition
-						salon.etats[conditionList[i]] = false // ajouter la variable au salon
+						conditions[condition] = true // positive condition
+						histoire.etats[condition] = false // ajouter la variable au salon
 					}
 				}
 				action.conditions = conditions
@@ -167,37 +196,11 @@ function parseStory(souce) {
 
 }
 
-// check for state setter in reply 
-function computeReply(reply, salon) {
-	let regexSetter = /{\s*(@|\+|-)\s*([^}\n\r]*)}/gm
-	let resultSetter = [...reply.matchAll(regexSetter)]
-	//console.log(resultSetter)
-	if (resultSetter.length > 0) {
-		for (i in resultSetter) {
-			let operator = resultSetter[i][1]
-			let variable = resultSetter[i][2]
-			// 'change salon' command
-			if (operator == "@") {
-				histoire.salonActuel = variable
-				salon = getSalonByName(variable)
-				console.log("We are now in "+histoire.salonActuel)
-
-			} else {
-				// salon state setter
-				salon.etats[variable] = operator == "+" ? true : false
-			}		
-		}
-		console.log(salon.etats)
-		return reply.replace(regexSetter, "")
-	}
-	return reply	
-}
-
 // find a salon by name in 'histoire' 
 function getSalonByName(salonName) {
-	for (indexSalon in histoire.salons) {
-		if (histoire.salons[indexSalon].titre == salonName) {
-			return histoire.salons[indexSalon]
+	for (salon of histoire.salons) {
+		if (salon.titre == salonName) {
+			return salon
 		}
 	}
 	console.log("no salon named " + salonName)
@@ -233,7 +236,7 @@ function findMatchingAction(sentence, actions) {
 	return result
 }
 // interpreter le script O10-C.txt
-function loadHistory() {
+function loadStory() {
     try {
         const data = fs.readFileSync('./O10-C.txt', 'utf8')
         return data
@@ -242,14 +245,26 @@ function loadHistory() {
 	}
 }
 //  update history from an url
-function fetchHistory(url) {
+function fetchStory(url) {
 	request(url, function (error, response, body) {
 		console.error('error:', error); // Print the error if one occurred
 		console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
 		parseStory(body)   
    });
 }
+
+// lire le fichier settings.json
+function loadSettings() {
+    try {
+		const data = fs.readFileSync('./settings.json', 'utf8')
+		let settings = JSON.parse(data)
+        return settings
+	} catch (err) {
+        console.error(err)
+	}
+}
+
 // démarrer le "parseur"
-let seetings = loadSettings()
-fetchHistory(settings.historyUrl)
+let settings = loadSettings()
+fetchStory(settings.storyUrl)
 bot.login(settings.discordToken)
