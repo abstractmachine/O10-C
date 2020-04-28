@@ -1,5 +1,7 @@
 settings.json
 package-lock.json
+log.txt
+story.json
 node_modules/
 .DS_Store/
 .vscode/
