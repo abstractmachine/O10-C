@@ -1,8 +1,22 @@
-/** 
- * #O10-C.js
- * 
- * 
- */
+/**
+	O10-C.js
+	========
+
+	- Authors:
+		- abstractmachine
+		- a line
+		- flatland666
+		- Bergamote
+		- Flore G
+		- Juste Leblanc
+		- Velvet
+	
+	- version:
+		0.1
+
+	A lightweight monofile game engine to play Zork-like interactive text game on a Discord server.
+	Blablabla logic-less syntaxe based on markdown.
+*/
 
 const discord = require('discord.js')
 const fs = require('fs')
@@ -12,14 +26,22 @@ const bot = new discord.Client()
 
 let story = {} // The main story object
 
-// 
-// Discord.js related functions
-// ----------------------------
+
+/**
+	Discord.js related functions
+	============================
+*/
+
+/**
+	The Discord bot readiness handler.
+*/
 bot.on('ready', () => {
 	console.log(`Logged in as ${bot.user.tag}!`);
 });
 
-// activer la réception des messages 
+/**
+	The Discord bot message reception handler.
+*/
 bot.on('message', message => {
 	// no bots allowed
 	if (message.author.bot) return
@@ -45,7 +67,7 @@ bot.on('message', message => {
 			replyToDiscordMessage(message, "Update done!")
 			return
 		}
-		//message.channel.name = story.currentPlace
+		
 		let reply = parseMessage(message.content, place)
 		replyToDiscordMessage(message, reply)
 	}
@@ -58,23 +80,25 @@ bot.on('message', message => {
 		if (look != null && message.channel.type === "text") {
 			// s'il s'agit d'un message emit d'un salon, trouver l'id du salon discord
 			let channel = message.guild.channels.cache.find(ch => ch.name === story.currentPlace)
-			let reply = "<@" + message.author.id + "> "+ computeReply(getPassedResponse(look.responses[0]) )
+			let reply = `<@${message.author.id}> ${computeReply(getPassedResponse(look.responses[0]))}`
 			if (channel != null) channel.send(reply)
 		} else {
-			let reply = "<@" + message.author.id + "> "+ computeReply(getPassedResponse(look.responses[0]) )
+			let reply = `<@${message.author.id}> ${computeReply(getPassedResponse(look.responses[0]))}`
 			replyToDiscordMessage(message, reply)
 		}
 	}
 })
 
 /**
- * Reply to a discord message
- * @param {Message} message The player message from discord text channel or DM channel
- * @param {string} reply The reply string 
- */
+	Reply to a discord message.
+
+	- parameters:
+		- message: The player message from discord text channel or DM channel.
+		- reply: The reply string.
+*/
 function replyToDiscordMessage(message, reply) {
 	logGameToFile(message.content)
-	logGameToFile("-> "+reply)
+	logGameToFile(`-> ${reply}`)
 
 	if (settings.cleanUpMessages && message.channel.type === "text") dicordMessageCleaner.feed(message)
 	message.reply(reply)
@@ -97,16 +121,21 @@ var dicordMessageCleaner = {
 	}
 }
 
-// 
-// Core O10-C engine
-// -----------------
+/**
+	Core O10-C engine
+	=================
+	*/
 
 /**
- * Parse a player message and return an answer
- * @param {string} message player message string.
- * @param {string} place place from where the message is issued.
- * @return {string} the message response from the story engine.
- */
+	Parse a player message and return an answer.
+
+	- parameters:
+		- message: The player message string.
+		- place: A string contaning the name of the place from where the message is issued.
+
+	- returns:
+		The message response string from the story engine.
+	*/
 function parseMessage(message, place) {
 	var reply = ""
 	// juste au cas où le salon n'a pas d'actions définies
@@ -136,36 +165,50 @@ function parseMessage(message, place) {
 			}
 			var tmpReply = ok ? getPassedResponse(response) : getFailedResponse(response)
 			tmpReply = computeReply(tmpReply)
-			reply += tmpReply != null ? tmpReply+" " : ""
+			reply += tmpReply != null ? `${tmpReply} ` : ""
 			if (!ok && response.fail.length) {
 				break // stop going down to next condition when a condition failed to pass
 			}
-		} else reply += computeReply(getPassedResponse(response))+" "
+		} else reply =`${reply} ${computeReply(getPassedResponse(response))} `
 	}
 	return reply
 }
-// random getters and setters of reactions and objections
+
 /**
- * return a random response from a set of possible positive responses
- * @param {Object} response a response object containing an array of possible responses
- */
+	Return a random response from a set of possible positive responses.
+
+	- parameters: 
+		response: A response object containing an array of possible responses.
+
+	- returns:
+		A response as string.
+	*/
 function getPassedResponse(response) {
 	return response.pass[Math.floor(Math.random() * response.pass.length)]
 }
 
 /**
- * return a random response from a set of possible negative responses
- * @param {Object} response a response object containing an array of possible responses
- */
+Return a random response from a set of possible negative responses.
+
+	- parameters:
+		response: A response object containing an array of possible responses.
+
+	- returns:
+		A response as string.
+*/
 function getFailedResponse(response) {
 	return response.fail[Math.floor(Math.random() * response.fail.length)]
 }
 
 /**
- * Analyse a response string and update the story states if needed.
- * @param {string} reply A reply string from story engine.
- * @return {string} Return the cleaned response string 
- */
+ 	Analyse a response string and update the story states if needed.
+
+	- parameter: 
+	reply: A reply string from story engine.
+
+	- returns:
+ 	The cleaned response string ..
+	*/
 function computeReply(reply) {
 	if (reply == null) return null
 	let regexSetter = /{\s*(@|\+|-|=)\s*([^}\n\r]*)}/gm
@@ -177,7 +220,7 @@ function computeReply(reply) {
 		
 		if (operator == "@") { // 'change place' command
 			story.currentPlace = variable
-			console.log("We are now in "+story.currentPlace)
+			console.log(`We are now in ${story.currentPlace}`)
 			story.placeChanged = true
 		} else if (operator == "=") { // 'death' command
 			if (variable == "DEATH") {
@@ -186,16 +229,18 @@ function computeReply(reply) {
 			}	
 		} else { // property setter (+ or -)
 			story.states[variable] = operator == "+" ? true : false
-			console.log(variable + " is now : " +story.states[variable])
+			console.log(`${variable}  is now : ${story.states[variable]}`)
 		}		
 	}
 	return reply.replace(regexSetter, "")
 }
 
 /**
- * Parse story source and build the game structure from it
- * @param {string} source The O10-C markDown source of the story
- */
+	Parse the story source code and build the game structure from it.
+
+	- parameters:
+		source: The O10-C markDown string source of the story.
+	*/
 function parseStory(source) {
 	let scenarioLines = source.split(/[\r\n]+/g).map(s => s.trim()).filter( e => e.length > 0) // split scenario by lines, trim and remove empty lines
 	
@@ -298,7 +343,7 @@ function parseStory(source) {
 			case ">": // ignore commented lines
 				break
 			default:
-				console.log("Warning, syntaxe error at line "+lineIndex)
+				console.log(`Warning, syntaxe error at line ${lineIndex}`)
 				console.log(line)
 		}
 	}	
@@ -307,27 +352,35 @@ function parseStory(source) {
 }
 
 /**
- * Find a place in story by it's name
- * @param {string} placeName The name of the plce to find in story
- * @return {Object} Return a place object or null if no place with that name exists
- */
+	Find a place in story by it's name.
+
+	- parameters:
+		placeName: The name of the pla	ce to find in story.
+
+	- returns:
+ 		A place object or null if no place with that name exists.
+	*/
 function getPlaceByName(placeName) {
 	for (place of story.places) {
 		if (place.name == placeName) {
 			return place
 		}
 	}
-	console.log("no place named " + placeName)
+	console.log(`no place named ${placeName}`)
 	// no place with that name, return null
 	return null
 }
 
 /**
- * Find a matching action from a sentence in a set of action objects.
- * @param {string} sentence The user input string.
- * @param {object} actions A set of action objects containing a set of commands and associated answsers.
- * @return {object} Return an object with the matching answers or null if none was found. 
- */
+	Find a matching action from a sentence in a set of action objects.
+
+	- parameters:
+		- sentence: The user input string.
+		- actions: A set of action objects containing a set of commands and associated answsers.
+
+	- returns:
+		An object with the matching answers or null if none was found. 
+	*/
 function findMatchingAction(sentence, actions) {
 	// séparer la phrase en mots
 	let sentenceWords = sentence.split(/(\s+)/).filter( e => e.trim().length > 0)
@@ -354,15 +407,20 @@ function findMatchingAction(sentence, actions) {
 	return result
 }
 
-// 
-// some utilities
-// --------------
+/**
+	Some utilities
+	==============
+*/
 
 /**
- * Load the story source from a local file.	
- * @param {string} path The file relative path.
- * @return {string} return the story source as an utf-8 string.
- */
+	Load the story source code from a local file.	
+
+	- parameters:
+		path: The file relative path.
+
+	- returns:
+		The story source as an utf-8 string.
+	*/
 function loadStoryFromFile(path) {
     try {
         const data = fs.readFileSync(path, 'utf8')
@@ -372,9 +430,12 @@ function loadStoryFromFile(path) {
 	}
 }
 /**
- * Load the story source from an url and parse it.
- * @param {URL} url The url of the story source with an http: or file: protocol.
- */
+	Load the story source from an url and parse it.
+
+	- parammeters: 
+		url: The url of the story source with an http: or file: protocol.
+	
+	*/
 function fetchStory(url) {
 	try { 	
 		let storyUrl = new URL(url)
@@ -383,8 +444,6 @@ function fetchStory(url) {
 			parseStory(body)
 		} else { // fetch story from remote server
 			request(url, function (error, response, body) {
-				//console.error('error:', error); // Print the error if one occurred
-				//console.log('statusCode:', response && response.statusCode); // Print the response status code if a response was received
 				parseStory(body)
 				story.toJson("story.json")  // dump story to json file for debugging
 			})
@@ -395,9 +454,11 @@ function fetchStory(url) {
 }
 
 /**
- * Load the game settings from the settings.json file.
- * @return {object} Return the settings as an object.
- */
+	Load the game settings from the settings.json file.
+
+	- returns:
+		The settings as an object.
+	*/
 function loadSettings() {
     try {
 		const data = fs.readFileSync('./settings.json', 'utf8')
@@ -409,24 +470,29 @@ function loadSettings() {
 }
 
 /**
- * Log the game activity to the log.txt file.
- * @param {string} log The string to be logged.
- */
+	Log the game activity to the log.txt file.
+
+	- parameters:
+		log: The string to be logged.
+	*/
 function logGameToFile(log) {
 	if (settings.logGame != true) return
 	let date = new Date()
 
 	var logStream = fs.createWriteStream('./log.txt', {flags: 'a'});
-	// use {flags: 'a'} to append and {flags: 'w'} to erase and write a new file
 	logStream.write(date.toLocaleString()+'\t'+log+'\n');
 	logStream.end();
 }
 
 /**
- * Return the emptiness of an object
- * @param {object} obj The object to test for emptiness
- * @return {Boolean} return true if the object is empty
- */
+	Return the emptiness of an object.
+	
+	- parameters:
+		obj: The object to test for emptiness.
+
+	- returns:
+		A boolean reprsenting the emptiness of the object.
+	*/
 function isEmpty(obj) {
     for(var key in obj) {
         if(obj.hasOwnProperty(key)) return false;
