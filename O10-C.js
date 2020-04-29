@@ -1,13 +1,20 @@
-// déclaration des variables Discord
+/** 
+ * #O10-C.js
+ * 
+ * 
+ */
+
 const discord = require('discord.js')
 const fs = require('fs')
 const util = require('util')
 const request = require('request');
 const bot = new discord.Client()
 
-let story = {}
-let messagesList = []
+let story = {} // The main story object
 
+// 
+// Discord.js related functions
+// ----------------------------
 bot.on('ready', () => {
 	console.log(`Logged in as ${bot.user.tag}!`);
 });
@@ -43,7 +50,7 @@ bot.on('message', message => {
 		replyToDiscordMessage(message, reply)
 	}
 
-	// Send a message to the player from the new place
+	// Send a reply mentioning the player if we are in a new place, from that new place.
 	if (story.placeChanged) {
 		story.placeChanged = false
 		let place = getPlaceByName(story.currentPlace)
@@ -60,23 +67,46 @@ bot.on('message', message => {
 	}
 })
 
+/**
+ * Reply to a discord message
+ * @param {Message} message The player message from discord text channel or DM channel
+ * @param {string} reply The reply string 
+ */
 function replyToDiscordMessage(message, reply) {
 	logGameToFile(message.content)
 	logGameToFile("-> "+reply)
-	if (message.channel.type === "text") messagesList.push(message)
-	message.reply(reply).then((rep) => messagesList.push(rep))
-	.catch(console.error);
-	if (settings.cleanUpMessages) cleanDiscordMessages()
+
+	if (settings.cleanUpMessages && message.channel.type === "text") dicordMessageCleaner.feed(message)
+	message.reply(reply)
+			.then((rep) => {if (settings.cleanUpMessages && message.channel.type === "text") dicordMessageCleaner.feed(rep)})
+			.catch(console.error)
+	
 }
 
-function cleanDiscordMessages(){
-	if (messagesList.length > 5) {
-		let lastMessage = messagesList.shift()
-		lastMessage.delete().then(msg => console.log(`Deleted message from ${msg.author.username}`))
-		.catch(console.error);
+// A ring buffer message cleaner object 
+var dicordMessageCleaner = {
+	messageList: [],
+	feed: function(message) {
+		this.messageList.push(message)
+		if (this.messageList.length > 10) {
+			let lastMessage = this.messageList.shift()
+			lastMessage.delete()
+						.then(msg => console.log(`Deleted message from ${msg.author.username}`))
+						.catch(console.error)
+		}
 	}
 }
 
+// 
+// Core O10-C engine
+// -----------------
+
+/**
+ * Parse a player message and return an answer
+ * @param {string} message player message string.
+ * @param {string} place place from where the message is issued.
+ * @return {string} the message response from the story engine.
+ */
 function parseMessage(message, place) {
 	var reply = ""
 	// juste au cas où le salon n'a pas d'actions définies
@@ -115,37 +145,57 @@ function parseMessage(message, place) {
 	return reply
 }
 // random getters and setters of reactions and objections
+/**
+ * return a random response from a set of possible positive responses
+ * @param {Object} response a response object containing an array of possible responses
+ */
 function getPassedResponse(response) {
 	return response.pass[Math.floor(Math.random() * response.pass.length)]
 }
 
+/**
+ * return a random response from a set of possible negative responses
+ * @param {Object} response a response object containing an array of possible responses
+ */
 function getFailedResponse(response) {
 	return response.fail[Math.floor(Math.random() * response.fail.length)]
 }
 
-// check for state setter in reply 
+/**
+ * Analyse a response string and update the story states if needed.
+ * @param {string} reply A reply string from story engine.
+ * @return {string} Return the cleaned response string 
+ */
 function computeReply(reply) {
 	if (reply == null) return null
-	let regexSetter = /{\s*(@|\+|-)\s*([^}\n\r]*)}/gm
+	let regexSetter = /{\s*(@|\+|-|=)\s*([^}\n\r]*)}/gm
 	let resultSetter = [...reply.matchAll(regexSetter)]
 
 	for (result of resultSetter) {
 		let operator = result[1]
 		let variable = result[2]
-		// 'change place' command
-		if (operator == "@") {
+		
+		if (operator == "@") { // 'change place' command
 			story.currentPlace = variable
 			console.log("We are now in "+story.currentPlace)
 			story.placeChanged = true
-		} else {
-			// place state setter
+		} else if (operator == "=") { // 'death' command
+			if (variable == "DEATH") {
+				fetchStory(settings.storyUrl) // restart the game
+				story.placeChanged = true
+			}	
+		} else { // property setter (+ or -)
 			story.states[variable] = operator == "+" ? true : false
 			console.log(variable + " is now : " +story.states[variable])
 		}		
 	}
 	return reply.replace(regexSetter, "")
 }
-// aller chercher le fichier .txt et le transformer en commandes
+
+/**
+ * Parse story source and build the game structure from it
+ * @param {string} source The O10-C markDown source of the story
+ */
 function parseStory(source) {
 	let scenarioLines = source.split(/[\r\n]+/g).map(s => s.trim()).filter( e => e.length > 0) // split scenario by lines, trim and remove empty lines
 	
@@ -180,11 +230,13 @@ function parseStory(source) {
 		return {"conditions":[], "pass":[], "fail":[]}
 	}
 
+	var lastTag = null
 	for (lineIndex in scenarioLines) {
 		let line = scenarioLines[lineIndex]
 		
 		switch(line[0]) { 
 			case "#": // nouveau salon
+				lastTag = "#"
 				action = null
 				responses = null
 				// créer un nouvel objet place avec son nom
@@ -196,6 +248,7 @@ function parseStory(source) {
 				} else story.places.push(place) // add the new place to the story
 				break;	
 			case "!": // action(s) du salon
+				lastTag = "!"
 				let regexActions = /!\s*(.*)/ // trouver toutes les actions et synonymes : !fait ci / fait ça / fait quoi
 				let allCommands = line.match(regexActions)[1]
 				let commands = allCommands.split(/\//g).map(s => s.trim()).filter( e => e.length > 0)// séparer les actions par /
@@ -206,6 +259,7 @@ function parseStory(source) {
 				place.actions.push(action) // ajouter l'objet action au salon
 				break;
 			case "?": // condition de réaction
+				lastTag = "?"
 				responses = responsesTemplate()
 				let allconditions = line.substr(1).trim()
 				let conditionList = allconditions.split(/\&/g).map(s => s.trim()).filter( e => e.length > 0)// séparer les conditions par &
@@ -223,14 +277,17 @@ function parseStory(source) {
 				action.responses.push(responses)
 				break;	
 			case "+": // pass condition 
+				lastTag = "+"
 				if (responses===null) {
 					responses = responsesTemplate()
 					action.responses.push(responses)
 				}
 				let positiveResponse = line.substr(1).trim()
 				responses.pass.push(positiveResponse)
+				positiveResponse
 				break;
 			case "-": // fail condition
+				lastTag = "-"
 				if (responses===null) {
 					responses = responsesTemplate()
 					action.responses.push(responses)
@@ -240,12 +297,20 @@ function parseStory(source) {
 				break;
 			case ">": // ignore commented lines
 				break
+			default:
+				console.log("Warning, syntaxe error at line "+lineIndex)
+				console.log(line)
 		}
 	}	
 	story.currentPlace = story.places[0].name
 	//console.log(util.inspect(story, {showHidden: false, depth: null, colors: true}))
 }
-// find a place by name in 'story' 
+
+/**
+ * Find a place in story by it's name
+ * @param {string} placeName The name of the plce to find in story
+ * @return {Object} Return a place object or null if no place with that name exists
+ */
 function getPlaceByName(placeName) {
 	for (place of story.places) {
 		if (place.name == placeName) {
@@ -256,7 +321,13 @@ function getPlaceByName(placeName) {
 	// no place with that name, return null
 	return null
 }
-// find a matching action from a sentence in an action list
+
+/**
+ * Find a matching action from a sentence in a set of action objects.
+ * @param {string} sentence The user input string.
+ * @param {object} actions A set of action objects containing a set of commands and associated answsers.
+ * @return {object} Return an object with the matching answers or null if none was found. 
+ */
 function findMatchingAction(sentence, actions) {
 	// séparer la phrase en mots
 	let sentenceWords = sentence.split(/(\s+)/).filter( e => e.trim().length > 0)
@@ -282,7 +353,16 @@ function findMatchingAction(sentence, actions) {
 	}
 	return result
 }
-// interpreter le script O10-C.txt
+
+// 
+// some utilities
+// --------------
+
+/**
+ * Load the story source from a local file.	
+ * @param {string} path The file relative path.
+ * @return {string} return the story source as an utf-8 string.
+ */
 function loadStoryFromFile(path) {
     try {
         const data = fs.readFileSync(path, 'utf8')
@@ -291,7 +371,10 @@ function loadStoryFromFile(path) {
         console.error(err)
 	}
 }
-//  update history from source
+/**
+ * Load the story source from an url and parse it.
+ * @param {URL} url The url of the story source with an http: or file: protocol.
+ */
 function fetchStory(url) {
 	try { 	
 		let storyUrl = new URL(url)
@@ -310,7 +393,11 @@ function fetchStory(url) {
 		console.log(e.message)
 	}
 }
-// lire le fichier settings.json
+
+/**
+ * Load the game settings from the settings.json file.
+ * @return {object} Return the settings as an object.
+ */
 function loadSettings() {
     try {
 		const data = fs.readFileSync('./settings.json', 'utf8')
@@ -320,15 +407,26 @@ function loadSettings() {
         console.error(err)
 	}
 }
-// enregitrer l'activité du jeu dans un fichier
+
+/**
+ * Log the game activity to the log.txt file.
+ * @param {string} log The string to be logged.
+ */
 function logGameToFile(log) {
 	if (settings.logGame != true) return
+	let date = new Date()
+
 	var logStream = fs.createWriteStream('./log.txt', {flags: 'a'});
 	// use {flags: 'a'} to append and {flags: 'w'} to erase and write a new file
-	logStream.write(log+'\n');
+	logStream.write(date.toLocaleString()+'\t'+log+'\n');
 	logStream.end();
 }
-// return the emptiness of an object
+
+/**
+ * Return the emptiness of an object
+ * @param {object} obj The object to test for emptiness
+ * @return {Boolean} return true if the object is empty
+ */
 function isEmpty(obj) {
     for(var key in obj) {
         if(obj.hasOwnProperty(key)) return false;
