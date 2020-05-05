@@ -2,11 +2,11 @@
 	O10-C.js
 	========
 
-	- Authors:
+	- authors:
 		- abstractmachine
 		- a line
-		- flatland666
 		- Bergamote
+		- flatland666
 		- Flore G
 		- Juste Leblanc
 		- Velvet
@@ -14,7 +14,7 @@
 	- version:
 		0.1
 
-	A lightweight monofile game engine to play Zork-like interactive text game on a Discord server.
+	A lightweight mono-file game engine to play Zork-like interactive text game on a Discord server.
 	Blablabla logic-less syntaxe based on markdown.
 */
 
@@ -24,7 +24,13 @@ const util = require('util')
 const request = require('request');
 const bot = new discord.Client()
 
-let story = {} // The main story object
+const story = {
+	places:[],
+	defaults: null,
+	currentPlace: null,
+	placeChanged: false,
+	states: {}
+} // The main story object
 
 
 /**
@@ -48,17 +54,17 @@ bot.on('message', message => {
 	// nettoyer le message
 	message.content = message.cleanContent
 	message.content = message.content.toLowerCase().trim()
-	let place = getPlaceByName(story.currentPlace)
+	const place = getPlaceByName(story.currentPlace)
 	// interprete les messages dans les channels publics type "text"
 	if (message.channel.type === "text" && message.content.startsWith('!')) {
 		message.content = message.content.substring(1).trim()
 		// verifier que le message est envoyé dans le place actuel 
 		if (message.channel.name != story.currentPlace) {
-			let channel = message.guild.channels.cache.find(ch => ch.name === story.currentPlace)
+			const channel = message.guild.channels.cache.find(ch => ch.name === story.currentPlace)
 			replyToDiscordMessage(message, "I'm in <#"+ channel.id + ">. Come and join me!")
 			return
 		}
-		let reply = parseMessage(message.content, place)
+		const reply = parseMessage(message.content, place)
 		replyToDiscordMessage(message, reply)
 	} else if (settings.directMessageMode && message.channel.type === "dm") {
 		// répondre au direct messages
@@ -68,22 +74,24 @@ bot.on('message', message => {
 			return
 		}
 		
-		let reply = parseMessage(message.content, place)
+		const reply = parseMessage(message.content, place)
 		replyToDiscordMessage(message, reply)
 	}
 
 	// Send a reply mentioning the player if we are in a new place, from that new place.
 	if (story.placeChanged) {
 		story.placeChanged = false
-		let place = getPlaceByName(story.currentPlace)
-		let look = findMatchingAction("look",place.actions)
-		if (look != null && message.channel.type === "text") {
+		const place = getPlaceByName(story.currentPlace)
+		message.content = "look"
+		reply = parseMessage(message.content, place)
+		//let look = findMatchingAction("look",place.actions)
+		if (reply != null && message.channel.type === "text") {
 			// s'il s'agit d'un message emit d'un salon, trouver l'id du salon discord
-			let channel = message.guild.channels.cache.find(ch => ch.name === story.currentPlace)
-			let reply = `<@${message.author.id}> ${computeReply(getPassedResponse(look.responses[0]))}`
+			const channel = message.guild.channels.cache.find(ch => ch.name === story.currentPlace)
+			reply = `<@${message.author.id}> ${reply}`
 			if (channel != null) channel.send(reply)
 		} else {
-			let reply = `<@${message.author.id}> ${computeReply(getPassedResponse(look.responses[0]))}`
+			reply = `<@${message.author.id}> ${reply}`
 			replyToDiscordMessage(message, reply)
 		}
 	}
@@ -104,16 +112,15 @@ function replyToDiscordMessage(message, reply) {
 	message.reply(reply)
 			.then((rep) => {if (settings.cleanUpMessages && message.channel.type === "text") dicordMessageCleaner.feed(rep)})
 			.catch(console.error)
-	
 }
 
 // A ring buffer message cleaner object 
-var dicordMessageCleaner = {
+const dicordMessageCleaner = {
 	messageList: [],
 	feed: function(message) {
 		this.messageList.push(message)
-		if (this.messageList.length > 10) {
-			let lastMessage = this.messageList.shift()
+		if (this.messageList.length > 20) {
+			const lastMessage = this.messageList.shift()
 			lastMessage.delete()
 						.then(msg => console.log(`Deleted message from ${msg.author.username}`))
 						.catch(console.error)
@@ -137,7 +144,7 @@ var dicordMessageCleaner = {
 		The message response string from the story engine.
 	*/
 function parseMessage(message, place) {
-	var reply = ""
+	let reply = ""
 	// juste au cas où le salon n'a pas d'actions définies
 	if (place == null || !place.hasOwnProperty("actions")) {
 		return "There is nothing to do here..."
@@ -155,15 +162,15 @@ function parseMessage(message, place) {
 
 	for (response of action.responses) {
 		if (!isEmpty(response.conditions)) { // la réponse est soumise à condition(s)
-			var ok = true
+			let ok = true
 			for (condition in response.conditions) {
-				if (story.states[condition] != response.conditions[condition]) {
+				if (story.states[condition].state != response.conditions[condition]) {
 					// the condition is not reached
 					ok = false
 					break;
 				}
 			}
-			var tmpReply = ok ? getPassedResponse(response) : getFailedResponse(response)
+			let tmpReply = ok ? getPassedResponse(response) : getFailedResponse(response)
 			tmpReply = computeReply(tmpReply)
 			reply += tmpReply != null ? `${tmpReply} ` : ""
 			if (!ok && response.fail.length) {
@@ -228,8 +235,14 @@ function computeReply(reply) {
 				story.placeChanged = true
 			}	
 		} else { // property setter (+ or -)
-			story.states[variable] = operator == "+" ? true : false
-			console.log(`${variable}  is now : ${story.states[variable]}`)
+			let split = variable.split(/(\-\>)/).filter( e => e.trim().length > 0) 
+			let variableName = split[0].trim()
+			let description = split[2] ? split[2].trim() : null
+			if (story.states[variableName]) {
+				if (description != null) story.states[variableName].description = description // set the variable description string for inventory
+				story.states[variableName].state = operator == "+" ? true : false
+				console.log(`${variableName} "${story.states[variableName].description}" is now : ${story.states[variableName].state}`)
+			} else console.log(`Warning: "${variableName}" is not defined.`)
 		}		
 	}
 	return reply.replace(regexSetter, "")
@@ -242,18 +255,17 @@ function computeReply(reply) {
 		source: The O10-C markDown string source of the story.
 	*/
 function parseStory(source) {
-	let scenarioLines = source.split(/[\r\n]+/g).map(s => s.trim()).filter( e => e.length > 0) // split scenario by lines, trim and remove empty lines
+	const scenarioLines = source.split(/[\r\n]+/g).map(s => s.trim()).filter( e => e.length > 0) // split scenario by lines, trim and remove empty lines
 	
-	story = {
-		title: "O10-C",
-		places:[],
-		defaults: null,
-		currentPlace: null,
-		placeChanged: false,
-		states: {}
-	}
+	// restet strory properties
+	story.places=[]
+	story.defaults=null
+	story.currentPlace=null
+	story.placeChanged=false
+	story.states={}
+	
 	story.toJson = function(path) {
-		var json = JSON.stringify(this, null, 4);
+		const json = JSON.stringify(this, null, 4);
 		fs.writeFile('./'+path, json, err => {
 			if (err) {
 			  console.error(err)
@@ -261,23 +273,23 @@ function parseStory(source) {
 		})
 	}
 	
-	var place, action, responses  
+	let place, action, responses  
 	
-	var placeTemplate = function (name) {
+	const placeTemplate = function (name) {
 		return { "name": name, "actions": [] }
 	}
 	
-	var actionTemplate = function (commands) {
+	const actionTemplate = function (commands) {
 		return { "commands":commands, "responses": [] }
 	}
 
-	var responsesTemplate = function () {
+	const responsesTemplate = function () {
 		return {"conditions":[], "pass":[], "fail":[]}
 	}
 
 	var lastTag = null
 	for (lineIndex in scenarioLines) {
-		let line = scenarioLines[lineIndex]
+		const line = scenarioLines[lineIndex]
 		
 		switch(line[0]) { 
 			case "#": // nouveau salon
@@ -285,7 +297,7 @@ function parseStory(source) {
 				action = null
 				responses = null
 				// créer un nouvel objet place avec son nom
-				let placeName = line.substr(1).trim()
+				const placeName = line.substr(1).trim()
 				place = placeTemplate(placeName)
 				// check for defaults 
 				if (placeName == "everywhere") {
@@ -295,7 +307,7 @@ function parseStory(source) {
 			case "!": // action(s) du salon
 				lastTag = "!"
 				let regexActions = /!\s*(.*)/ // trouver toutes les actions et synonymes : !fait ci / fait ça / fait quoi
-				let allCommands = line.match(regexActions)[1]
+				let allCommands = line.match(regexActions)[1].toLowerCase()
 				let commands = allCommands.split(/\//g).map(s => s.trim()).filter( e => e.length > 0)// séparer les actions par /
 				
 				action = actionTemplate(commands)
@@ -310,12 +322,21 @@ function parseStory(source) {
 				let conditionList = allconditions.split(/\&/g).map(s => s.trim()).filter( e => e.length > 0)// séparer les conditions par &
 				let conditions = {}
 				for (condition of conditionList) {
+					
 					if (condition[0]=="!") {
 						conditions[condition.substr(1).trim()] = false // negative condition
-						story.states[condition.substr(1).trim()] = false // ajouter la variable au place
+						
+						story.states[condition.substr(1).trim()]={
+							"state":false,
+							"description": null
+						}
 					} else {
+					
 						conditions[condition] = true // positive condition
-						story.states[condition] = false // ajouter la variable au place
+						story.states[condition]= {
+							"state":false,
+							"description": null
+						}
 					}
 				}
 				responses.conditions = conditions
@@ -355,10 +376,10 @@ function parseStory(source) {
 	Find a place in story by it's name.
 
 	- parameters:
-		placeName: The name of the pla	ce to find in story.
+		placeName: The name of the place to find in story.
 
 	- returns:
- 		A place object or null if no place with that name exists.
+ 		The matching place object or null on failure.
 	*/
 function getPlaceByName(placeName) {
 	for (place of story.places) {
@@ -383,7 +404,7 @@ function getPlaceByName(placeName) {
 	*/
 function findMatchingAction(sentence, actions) {
 	// séparer la phrase en mots
-	let sentenceWords = sentence.split(/(\s+)/).filter( e => e.trim().length > 0)
+	const sentenceWords = sentence.split(/(\s+)/).filter( e => e.trim().length > 0)
 	
 	var result = null
 	var score = 0
@@ -438,9 +459,9 @@ function loadStoryFromFile(path) {
 	*/
 function fetchStory(url) {
 	try { 	
-		let storyUrl = new URL(url)
+		const storyUrl = new URL(url)
 		if (storyUrl.protocol == "file:") { // fetch story from local file
-			let body = loadStoryFromFile(storyUrl.hostname)
+			const body = loadStoryFromFile(storyUrl.hostname)
 			parseStory(body)
 		} else { // fetch story from remote server
 			request(url, function (error, response, body) {
@@ -462,7 +483,7 @@ function fetchStory(url) {
 function loadSettings() {
     try {
 		const data = fs.readFileSync('./settings.json', 'utf8')
-		let settings = JSON.parse(data)
+		const settings = JSON.parse(data)
         return settings
 	} catch (err) {
         console.error(err)
@@ -477,9 +498,9 @@ function loadSettings() {
 	*/
 function logGameToFile(log) {
 	if (settings.logGame != true) return
-	let date = new Date()
+	const date = new Date()
 
-	var logStream = fs.createWriteStream('./log.txt', {flags: 'a'});
+	const logStream = fs.createWriteStream('./log.txt', {flags: 'a'});
 	logStream.write(date.toLocaleString()+'\t'+log+'\n');
 	logStream.end();
 }
@@ -494,13 +515,13 @@ function logGameToFile(log) {
 		A boolean reprsenting the emptiness of the object.
 	*/
 function isEmpty(obj) {
-    for(var key in obj) {
+    for(let key in obj) {
         if(obj.hasOwnProperty(key)) return false;
     }
     return true;
 }
 
 // démarrer le "parseur"
-let settings = loadSettings()
+const settings = loadSettings()
 fetchStory(settings.storyUrl)
 bot.login(settings.discordToken)
