@@ -1064,4 +1064,8 @@ Alchimy, Ancient and Modern, H.Stanley Redgrove, 1922.
 ! leave / go back
 ? !spider here
 + You leave it for now. {@🌈général}
+<<<<<<< HEAD
 - The spider prevents you from running away!
+=======
+- The spider prevents you from running away!
+>>>>>>> c8c85ecb88976f8af7b73511f7e3e9366c724aa4
