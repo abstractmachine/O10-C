@@ -1,6 +1,6 @@
 {
     "discordToken": "Discord-token-here",
-    "storyUrl": "https://github.com/happycodefarm/O10-C/blob/master/examples/story-example.txt",
+    "storyUrl": "https://happycodefarm.github.io/O10-C/examples/story-example.md",
     "logGame" : true,
     "directMessageMode": true,
     "cleanUpMessages": true,
