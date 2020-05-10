@@ -1053,7 +1053,6 @@ Alchimy, Ancient and Modern, H.Stanley Redgrove, 1922.
 + All of a sudden, a glimmering light appears and chases the darkness away! Frightened and screeching, the spider leaves. Right in front of you stands the unicorn you fed sooner with a sandwich. After giving you a look, it desapears in a myriad of light sparks. You have been saved. {-spider here} {-spider present} {-unicorn fed}
 - But nothing happens.
 
-
 ! dragon blade / dragon sword / dragon blade! / dragon blade!!! / dragon blade!!
 ? dragon blade
 - What the fuck, you don't even know that technique!
@@ -1064,8 +1063,4 @@ Alchimy, Ancient and Modern, H.Stanley Redgrove, 1922.
 ! leave / go back
 ? !spider here
 + You leave it for now. {@🌈général}
-<<<<<<< HEAD
 - The spider prevents you from running away!
-=======
-- The spider prevents you from running away!
->>>>>>> c8c85ecb88976f8af7b73511f7e3e9366c724aa4
