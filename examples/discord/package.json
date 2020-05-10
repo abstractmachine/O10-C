@@ -1,0 +1,28 @@
+{
+  "name": "o10-c",
+  "version": "1.0.0",
+  "description": "O10-C Discord Textual Game",
+  "main": "O10-C.js",
+  "dependencies": {
+    "discord.js": "^12.2.0",
+    "node-fetch": "^2.6.0"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/happycodefarm/O10-C.git"
+  },
+  "keywords": [
+    "zork",
+    "ESAAix"
+  ],
+  "author": "ESAAix",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/happycodefarm/O10-C/issues"
+  },
+  "homepage": "https://github.com/happycodefarm/O10-C#readme"
+}

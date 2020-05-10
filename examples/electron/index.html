@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+  <title>O10-C</title>
+  <script>
+    const {ipcRenderer} = require('electron')
+    const {showdown} = require('showdown')
+
+    function init() {
+      const user_input = document.getElementById('user-input')
+      user_input.addEventListener('keyup', validate)
+      document.addEventListener('keydown', refocus);
+
+      function refocus(e) {
+        user_input.focus()
+      }
+    }
+
+    ipcRenderer.on('main-message', function(event, args) {
+      console.log(args);
+      try {
+        const message = JSON.parse(args)
+        const textarea = document.getElementById('terminal')
+        const user_input = document.getElementById('user-input')
+        textarea.innerHTML += message.content + "<br>"
+        user_input.scrollIntoView();
+        user_input.focus()
+      } catch (err) {
+					console.log("error json parse: " + err);
+      }
+    })
+
+    function validate(event) {
+      
+      if (event.keyCode === 13) {
+        event.preventDefault()
+        const message = event.target.innerHTML.replace("<br><br>", "")
+        console.log(event)
+        event.target.innerHTML = ""
+        ipcRenderer.send('user-message', message)
+        console.log(message)
+        const textarea = document.getElementById('terminal')
+        textarea.innerHTML += '<p>> ' + message + '</p>'
+        textarea.scrollTop = textarea.scrollHeight
+
+      }
+    }
+  </script>
+  <style media="screen" type="text/css">
+    body {
+      margin:1em;
+      padding:0;
+      border:0;
+      font-family: "Courier New", Courier, monospace;
+      box-sizing: border-box;
+      font-size: 16px;
+    }
+    .content {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      overflow-y: scroll;
+    }
+  
+    #terminal {
+      resize: none;
+      display: block;
+      width: 100%;
+      height: 100%;
+      margin:0;
+      padding: 0.5em;
+      padding-bottom: 0;
+      border: none;
+    } 
+
+    label {
+      padding: 0;
+      padding-left: 0.5em;
+    }
+
+    p {
+      margin: 0;
+      padding: 0;
+    }
+
+    code {
+      display:block;
+      background-color: lightgrey;
+      font-family: "Courier New", Courier, monospace;
+    }
+    #user-input {
+      padding: 0.5em;
+      padding-bottom: 0;
+      outline: none;
+      border: none;
+      font-family: "Courier New", Courier, monospace;
+      font-size: 16px;
+      width: auto;
+    }
+
+    #user-input::before {
+      content: "> ";
+    }
+
+    #title {
+      display: block;
+      height: 20px;
+      margin-bottom: 2em;
+      padding: 0.25em;
+    }
+
+  </style>
+</head>
+	<body onload="init()" id="body">
+    <div id="content">
+      <h1 id="title">The great adventure of the O10-C.</h1>
+      <div id="terminal"></div>
+      <span id="user-input" contenteditable autofocus></span>
+    </div>
+  </body>
+</html>

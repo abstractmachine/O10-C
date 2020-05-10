@@ -1,0 +1,8 @@
+{
+    "discordToken": "discord-token-here",
+    "storyUrl": "https://hackmd.io/YXmNK5k5TdKTKhbpelbbWw/download",
+    "logGame" : true,
+    "directMessageMode": true,
+    "cleanUpMessages": true,
+    "debug": true
+}

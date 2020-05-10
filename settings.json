@@ -1,7 +1,0 @@
-{
-    "discordToken": "discord-token here",
-    "storyUrl": "http://story_file_url.net/story.txt",
-    "logGame" : true,
-    "directMessageMode": true,
-    "cleanUpMessages": true
-}

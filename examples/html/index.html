@@ -1,0 +1,112 @@
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="description" content="The zorkdown game engine html example">
+  <title>zorkdown html example</title>
+  <link rel='stylesheet' href='style.css' type='text/css'>
+  
+  <script src='https://unpkg.com/showdown/dist/showdown.min.js'></script>
+  <script src='../../src/zorkdown.js'></script>
+  <script>
+    let zork = null
+
+
+    var converter = new showdown.Converter();
+    converter.setOption('simpleLineBreaks', true)
+    
+   
+    function zorkdown_init() {
+      console.log('init')
+      let source = getSource('https://hackmd.io/YXmNK5k5TdKTKhbpelbbWw/download').then((source) =>{
+        zork = new Zorkdown(source)
+        console.log(zork)
+        const user_input = document.getElementById('zorkdown-user-input')
+        user_input.addEventListener('keyup', validate)
+        document.addEventListener('keydown', refocus);
+
+        function refocus(e) {
+          user_input.focus()
+        }
+      }).catch((e)=> {
+        console.log('Zork error')
+        console.log(e)
+        })
+    
+    }
+    
+    function validate(event) {
+      if (event.keyCode === 13) {
+        
+      event.preventDefault()
+      const input = event.target.innerHTML.replace('<br><br>', '')
+      
+      let message = {}
+      message.content = input.toLowerCase().trim()
+      
+      let place = zork.getPlaceByName(zork.story.currentPlace)
+
+      let reply = zork.parseMessage(message.content, place)
+      event.target.innerHTML = ''
+      
+      var html = converter.makeHtml(reply)
+    
+
+      const terminal = document.getElementById('zorkdown-terminal')
+      terminal.innerHTML += '<p>> ' + input + '</p><p> ' + html + '</p>'
+      terminal.scrollTop = terminal.scrollHeight
+      
+      const user_input = document.getElementById('zorkdown-user-input')
+      user_input.focus()
+      
+      const zork_content = document.getElementById('zorkdown-content')
+      zork_content.scrollTop = zork_content.scrollHeight
+      
+      if (zork.story.placeChanged) {
+        place = zork.getPlaceByName(zork.story.currentPlace)
+        zork.story.placeChanged = false
+        message.content = 'look'
+        reply = zork.parseMessage(message.content, place)
+        var html = converter.makeHtml(reply)
+        textarea.innerHTML += '<p> ' + html + '</p>'
+        textarea.scrollTop = textarea.scrollHeight
+      }
+    }
+  }
+    
+    function getSource(url) {
+      
+      return new Promise(function(resolve, reject) {
+        console.log(url)
+        let xmlHttp = new XMLHttpRequest()
+        xmlHttp.open('GET',url, true)
+        
+        xmlHttp.onerror = function() {
+          console.log('error')
+          reject(Error('There was a network error.'))
+        }
+        
+        xmlHttp.onload=function() {
+          if (xmlHttp.status === 200) {
+            console.log('ok')
+            resolve(xmlHttp.responseText)
+          } else {
+            console.log('error request')
+            reject(Error('Network error: ' + xmlHttp.statusText))
+          }
+        }
+        
+        xmlHttp.send()
+      })
+      
+    }
+  </script>
+</head>
+<body>
+<div class='zorkdown-content' id='zorkdown-content'>
+  <h1 id='zorkdown-title' class='zorkdown-title'>The great adventure of the O10-C.</h1>
+  <div id='zorkdown-terminal' class='zorkdown-terminal'></div>
+    <span id='zorkdown-user-input' class='zorkdown-user-input' contenteditable autofocus placeholder='...'></span>
+  </div>
+<script>zorkdown_init()</script>
+</body>
+</html>

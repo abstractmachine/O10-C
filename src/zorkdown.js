@@ -23,6 +23,9 @@ It interprets a lightweight markup language called Zorkdown .
 Core Zorkdown engine class
 ==========================
 */
+
+'use strict' // just because javascript is permissive enough
+
 class Zorkdown {
 
   /**
@@ -145,18 +148,26 @@ class Zorkdown {
         this.story.placeChanged = true
       } else if (operator == "=") { // 'death' command
         if (variable == "DEATH") {
-          this.parseStory(source) // restart the game
-          story.placeChanged = true
+          this.parseStory(this.story.source) // restart the game
+          this.story.placeChanged = true
         }	
       } else { // property setter (+ or -)
         let split = variable.split(/(\-\>)/).filter( e => e.trim().length > 0) 
         let variableName = split[0].trim()
         let description = split[2] ? split[2].trim() : null
-        if (this.story.states[variableName]) {
+
+        if (!this.story.states[variableName]) { // Add a state to the story.
+          this.story.states[variableName] = {
+            "state": operator == "+" ? true : false,
+            "description": description
+          }
+          console.log(`${variableName} "${this.story.states[variableName].description}" is now : ${this.story.states[variableName].state}`)
+
+        } else { // The state exist, update it.
           if (description != null) this.story.states[variableName].description = description // set the variable description string for inventory
           this.story.states[variableName].state = operator == "+" ? true : false
           console.log(`${variableName} "${this.story.states[variableName].description}" is now : ${this.story.states[variableName].state}`)
-        } else console.log(`Warning: "${variableName}" is not defined.`)
+        }
       }		
     }
     return reply.replace(regexSetter, "")
@@ -169,8 +180,8 @@ class Zorkdown {
       source: The O10-C markDown string source of the story.
     */
   parseStory(source) {
-    const scenarioLines = source.split(/[\r\n]+/g).map(s => s.trim()).filter( e => e.length > 0) // split scenario by lines, trim and remove empty lines
-    
+    const scenarioLines = source.split(/[\r\n]+/g)
+
     // restet strory properties
     this.story.places=[]
     this.story.defaults=null
@@ -178,13 +189,10 @@ class Zorkdown {
     this.story.placeChanged=false
     this.story.states={}
     
-    this.story.toJson = function(path) {
-      const json = JSON.stringify(this, null, 4);
-      fs.writeFile('./'+path, json, err => {
-        if (err) {
-          console.error(err)
-        }
-      })
+    // save story to a json file
+    this.story.toJson = function() {
+      const json = JSON.stringify(this.story, null, 4)
+      return json
     }
     
     let place, action, responses  
@@ -205,7 +213,7 @@ class Zorkdown {
     for (const lineIndex in scenarioLines) {
       const line = scenarioLines[lineIndex]
       
-      switch(line[0]) {
+      switch(line.trim()[0]) {
         case "#": // nouveau salon
           lastTag = "#"
           action = null
@@ -220,8 +228,9 @@ class Zorkdown {
           break;	
         case "!": // action(s) du salon
           lastTag = "!"
-          let regexActions = /!\s*(.*)/ // trouver toutes les actions et synonymes : !fait ci / fait ça / fait quoi
-          let allCommands = line.match(regexActions)[1].toLowerCase()
+          //let regexActions = /!\s*(.*)/ // trouver toutes les actions et synonymes : !fait ci / fait ça / fait quoi
+          //let allCommands = line.match(regexActions)[1].toLowerCase()
+          let allCommands = line.substr(1).trim()
           let commands = allCommands.split(/\//g).map(s => s.trim()).filter( e => e.length > 0)// séparer les actions par /
           
           action = actionTemplate(commands)
@@ -232,8 +241,8 @@ class Zorkdown {
         case "?": // condition de réaction
           lastTag = "?"
           responses = responsesTemplate()
-          let allconditions = line.substr(1).trim()
-          let conditionList = allconditions.split(/\&/g).map(s => s.trim()).filter( e => e.length > 0)// séparer les conditions par &
+          let allConditions = line.substr(1).trim()
+          let conditionList = allConditions.split(/\&/g).map(s => s.trim()).filter( e => e.length > 0)// séparer les conditions par &
           let conditions = {}
           for (const condition of conditionList) {
             
@@ -264,7 +273,6 @@ class Zorkdown {
           }
           let positiveResponse = line.substr(1).trim()
           responses.pass.push(positiveResponse)
-          positiveResponse
           break;
         case "-": // fail condition
           lastTag = "-"
@@ -274,16 +282,24 @@ class Zorkdown {
           }
           let negativeResponse = line.substr(1).trim()
           responses.fail.push(negativeResponse)
-          break;
+          break
         case ">": // ignore commented lines
           break
         default:
-          console.log(`Warning, syntaxe error at line ${lineIndex}`)
-          console.log(line)
+          if (responses != null) {
+            if (lastTag == "+") {
+              responses.pass[responses.pass.length - 1] += `\n${line}`
+            } else if(lastTag == "-") {
+              responses.fail[responses.fail.length - 1] += `\n${line}`
+            } else {
+              console.log(`Warning, syntaxe error at line ${lineIndex}`)
+              console.log(line)
+            }
+          }
+          
       }
     }	
     this.story.currentPlace = this.story.places[0].name
-    //console.log(util.inspect(story, {showHidden: false, depth: null, colors: true}))
   }
   
   /**
@@ -317,7 +333,6 @@ class Zorkdown {
       An object with the matching answers or null if none was found. 
     */
   findMatchingAction(sentence, actions) {
-    // séparer la phrase en mots
     const sentenceWords = sentence.split(/(\s+)/).filter( e => e.trim().length > 0)
     
     let result = null
@@ -325,7 +340,6 @@ class Zorkdown {
     for (const i in actions) {
       let commands = actions[i].commands
         for (const j in commands) {
-          // séparer la commande par mots
           let commandParts = commands[j].split(/(\s+)/).map(s => s.trim()).filter( e => e.length > 0)
           // https://stackoverflow.com/questions/1187518/how-to-get-the-difference-between-two-arrays-in-javascript
           let intersection = sentenceWords.filter(x => commandParts.includes(x))
@@ -333,8 +347,8 @@ class Zorkdown {
           if (intersection.length == commandParts.length) {
             // set only if matching score is higher than previous match
             if (score <= intersection.length) {
-            result = actions[i]
-            score = intersection.length
+              result = actions[i]
+              score = intersection.length
             }
           }
         }
@@ -342,6 +356,25 @@ class Zorkdown {
     return result
   }
 
+  /**
+  Get the player inventory.
+
+  - note:
+    The inventory list all the story states with a description that are true.
+
+  - returns:
+    A string with the inventoy list
+  */
+  getInventory() {
+    let inventory = []
+    for (const state in this.story.states) {     
+      if (this.story.states[state].state == true && this.story.states[state].description !== null) {
+        inventory.push(this.story.states[state].description)
+      }
+    }
+    if (inventory.length > 0) return "You have:\n- "+inventory.join("\n- ")
+    else return "You are empty handed."
+  }
   /**
   Return the emptiness of an object.
   
@@ -358,5 +391,6 @@ class Zorkdown {
     return true;
   }
 }
-
-module.exports = Zorkdown
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = zorkdown
+}

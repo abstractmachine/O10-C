@@ -20,9 +20,8 @@
 
 const discord = require('discord.js')
 const fs = require('fs')
-const util = require('util')
-const request = require('request')
-const zorkdown = require('./zorkdown.js')
+const fetch = require('node-fetch')
+const zorkdown = require('../../src/zorkdown.js')
 
 const bot = new discord.Client()
 let zork = null
@@ -60,7 +59,13 @@ bot.on('message', message => {
 			else console.log(`Warning: Unmatched Discord Channel name in the story scenario, ${zork.story.currentPlace}`)
 			return
 		}
-		const reply = parseMessage(message.content, place)
+
+		if (message.content == "inventory") {
+			replyToDiscordMessage(message, zork.getInventory())
+			return
+		}
+
+		const reply = zork.parseMessage(message.content, place)
 		replyToDiscordMessage(message, reply)
 	} else if (settings.directMessageMode && message.channel.type === "dm") {
 		// Respond to DM Discord messages
@@ -72,7 +77,9 @@ bot.on('message', message => {
 				console.log("Zork error")
 				console.log(e)
 			})
-			
+			return
+		} else if (message.content == "!inventory") {
+			replyToDiscordMessage(message, zork.getInventory())
 			return
 		}
 		
@@ -89,10 +96,15 @@ bot.on('message', message => {
 		//let look = findMatchingAction("look",place.actions)
 		if (reply != null && message.channel.type === "text") {
 			// s'il s'agit d'un message emit d'un salon, trouver l'id du salon discord
-			const channel = message.guild.channels.cache.find(ch => ch.name === story.currentPlace)
+			const channel = message.guild.channels.cache.find(ch => ch.name === zork.story.currentPlace)
 			reply = `<@${message.author.id}> ${reply}`
-			if (channel != null) channel.send(reply)
-			else console.log(`Warning: Unmatched Discord Channel name in the story scenario, ${story.currentPlace}`)
+			if (channel != null) channel.send(reply).then((rep) => {if (settings.cleanUpMessages) dicordMessageCleaner.feed(rep)})
+			.catch(console.error)
+			else {
+				let warning = `Warning: Unmatched Discord Channel name in the story scenario, ${zork.story.currentPlace}`
+				console.log(warning)
+				if (settings.debug == true) replyToDiscordMessage(warning, reply)
+			}
 		} else {
 			reply = `<@${message.author.id}> ${reply}`
 			replyToDiscordMessage(message, reply)
@@ -168,13 +180,15 @@ function fetchStory(url) {
 			const storyUrl = new URL(url)
 			if (storyUrl.protocol == "file:") { // fetch story from local file
 				const source = loadStoryFromFile(storyUrl.hostname)
+				console.log(`Story loaded from ${url}`)
 				resolve(source)
 			} else { // fetch story from remote server
-				request(url, function (error, response, body) {
-					resolve(body)
-					//story.toJson("story.json")  // dump story to json file for debugging
-				})
+				fetch(url)
+    			.then(res => res.text())
+					.then(body => resolve(body))
+					.catch(err => console.error(err))
 			}
+			
 		} catch (e) {
 			console.log(e.message)
 			reject("File not found.")
@@ -216,9 +230,10 @@ function logGameToFile(log) {
 // démarrer le "parseur"
 const settings = loadSettings()
 fetchStory(settings.storyUrl).then((source) =>{
+	console.log(`Story loaded from ${settings.storyUrl}.`)
 	zork = new zorkdown(source)
 }).catch((e)=> {
-	console.log("Zork error")
+	console.log("Error loading Zorkdown source file.")
 	console.log(e)
 })
 
