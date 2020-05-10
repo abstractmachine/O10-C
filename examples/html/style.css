@@ -1,9 +1,13 @@
 
-.zorkdown-content {
-  margin:1em;
-  padding:1em;
-  padding-bottom: 4em;
+* {
+  margin: 0;
+  padding: 0;
+}
 
+.zorkdown-content {
+  margin:0 1em 0 1em;
+  padding:0 1em 0 1em;
+  padding-bottom: 4em;
   border:0;
   box-sizing: border-box;
   font-family: monospace;
@@ -51,5 +55,5 @@ p {
 .zorkdown-title {
   display: block;
   height: 20px;
-  margin-bottom: 2em;
+  margin: 2em 0 2em 0;
 }
