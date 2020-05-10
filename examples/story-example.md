@@ -233,12 +233,12 @@
 
 ! look / observe / hi / hello
 + **Welcome to O10-C!**
-O10-C is a fantastic textual game, where you have to explore the Art school of Aix-en-Provence via Discord. Mysteries, secrets, barking unicorns and crazy stuff await you! If you need more informations about the game, just type "`!how to play`" in your message. 
-To see the credits, type "`!credits`". If you want to begin or continue your adventure, type "`!start game`" and start playing.
+O10-C is a fantastic textual game, where you have to explore the Art school of Aix-en-Provence. Mysteries, secrets, barking unicorns and crazy stuff await you! If you need more informations about the game, just type "`how to play`" in your message. 
+To see the credits, type "`credits`". If you want to begin or continue your adventure, type "`start game`" and start playing.
 
 ! how to play / how game / how to
-+ Playing this game is rather simple. Every single action related to this game has to be typed with a "`!`" first. What comes next should be a verb, like "`! look`". Generally, your verb should be followed by a noun. For example : "`! take clothes`", "`! open door`", "`! go to #🌈général`"…
-To see what is in your inventory, just type "`!inventory`"
++ Playing this game is rather simple. Every single action related to this game has to be typed with a "`!`" first. What comes next should be a verb, like "`! look`". Generally, your verb should be followed by a noun. For example : "`take clothes`", "`open door`", "`go to #🌈général`"…
+To see what is in your inventory, just type "`inventory`"
 A few verbs are frequently usable, such as "`take`", "`look`", "`go to`", "`leave`", "`say`", "`enter`", "`inspect`"… And the rest is up to you!
 
 ! credits / see credits
