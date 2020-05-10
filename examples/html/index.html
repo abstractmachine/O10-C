@@ -17,7 +17,7 @@
    
     function zorkdown_init() {
       console.log('init')
-      let source = getSource('https://hackmd.io/YXmNK5k5TdKTKhbpelbbWw/download').then((source) =>{
+      let source = getSource('https://github.com/happycodefarm/O10-C/blob/master/examples/story-example.txt').then((source) =>{
         zork = new Zorkdown(source)
         console.log(zork)
         const user_input = document.getElementById('zorkdown-user-input')
