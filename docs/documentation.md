@@ -244,17 +244,17 @@ Note that the first salon in your game file will be the default salon: this is w
 
 #### Global actions
 
-For global actions, i.e actions that are possible everywhere, just write those in `# everywhere`:
+For global actions, i.e actions that are possible everywhere, just write those in the top of the story, prior to any #salon creation:
 
 ```
-# everywhere
-
 > The following paragraphs are global
 
 ! say
 + You said that.
 + You said something.
 + You said it.
+
+# First salon
 ```
 #### Going from one salon to another
 You can go from the current salon to another with a command into curly brackets, like a boolean: `{@(name of salon)}`

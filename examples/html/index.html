@@ -17,7 +17,7 @@
       let source = getSource('https://happycodefarm.github.io/O10-C/examples/story-example.md')
       .then((source) =>{
         zork = new Zorkdown(source)
-        
+        console.log(zork)
         let place = zork.getPlaceByName(zork.story.currentPlace)
         reply = zork.parseMessage("look", place)
 

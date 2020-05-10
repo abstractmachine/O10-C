@@ -213,6 +213,10 @@ class Zorkdown {
     }
   
     var lastTag = null
+
+    place = placeTemplate("everywhere")
+    this.story.defaults = place
+
     for (const lineIndex in scenarioLines) {
       const line = scenarioLines[lineIndex]
       
@@ -224,10 +228,7 @@ class Zorkdown {
           // créer un nouvel objet place avec son nom
           const placeName = line.substr(1).trim()
           place = placeTemplate(placeName)
-          // check for defaults 
-          if (placeName == "everywhere") {
-            this.story.defaults = place
-          } else this.story.places.push(place) // add the new place to the story
+          this.story.places.push(place) // add the new place to the story
           break;	
         case "!": // action(s) du salon
           lastTag = "!"
@@ -438,5 +439,5 @@ class Zorkdown {
   }
 }
 if (typeof module !== 'undefined' && module.exports) {
-  module.exports = zorkdown
+  module.exports = Zorkdown
 }

@@ -45,6 +45,7 @@ function createWindow () {
 
   fetchStory(settings.storyUrl).then((source) =>{
     zorkdown_instance = new zorkdown(source)
+    console.log(zorkdown_instance)
     const place = zorkdown_instance.getPlaceByName(zorkdown_instance.story.currentPlace)
     let message = {}
     message.content = "look"

@@ -1,12 +1,8 @@
 > To do list : https://hackmd.io/4mckHWfnT1GGA-wMnKRPbw?both
 > Documentation : https://hackmd.io/s_8hu2MPQr2iveB_6lfVbw
 
-# everywhere
-
-> 'everywhere' est un salon spécial où l'on peut placer les réactions par defaut et les actions qui peuvent se faire n'importe où.
-
-
-> L'action * est un "attrape-tout" utilisé quand aucune autre action n'est déclanchée.
+> Toutes actions placées en tête du document et avant toute création d'un #espace agissent comme des actions globales accessibles de partout.
+> L'action * est un "attrape-tout" utilisé quand aucune autre action corresondante n'est trouvée dans l'espace dans lequel se trouve le joueur.
  
 ! *
 + I am afraid you can't do that.
@@ -25,7 +21,6 @@
 + Even though you can't see anything, you can feel its dreadful presence.
 
 > Le reste des actions du salon '#everywhere' sont utilisées comme solutions de replis si le message du joueur n'est pas reconnu dans le salon dans lequel il est émit.
-
 
 > --- Utiliser des objets dans tous les salons ---
 
