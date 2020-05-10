@@ -1,3 +1,22 @@
+/**
+	index.js
+	========
+
+	- authors:
+		- abstractmachine
+		- a line
+		- Bergamote
+		- flatland666
+		- Flore G
+		- Juste Leblanc
+		- Velvet
+	
+	- version:
+		0.1
+
+	An html/javascript example of the Zorkdown textual game engine implemented in a simple web page.
+*/
+
 const {app} = require('electron')
 const {BrowserWindow, Menu, MenuItem} = require('electron')
 const fs = require('fs')

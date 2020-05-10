@@ -14,8 +14,7 @@
 	- version:
 		0.1
 
-	A lightweight single-file game engine to play Zork-like interactive text game on a Discord server.
-	Blablabla logic-less syntaxe based on markdown.
+	A Node.js example of the Zorkdown textual game engine on a Discord server using discord.js module.
 */
 
 const discord = require('discord.js')
@@ -27,8 +26,8 @@ const bot = new discord.Client()
 let zork = null
 
 /**
-	Discord.js related functions
-	============================
+	Discord.js related functions.
+	=============================
 */
 
 /**
@@ -78,9 +77,6 @@ bot.on('message', message => {
 				console.log(e)
 			})
 			return
-		} else if (message.content == "!inventory") {
-			replyToDiscordMessage(message, zork.getInventory())
-			return
 		}
 		
 		const reply = zork.parseMessage(message.content, place)
@@ -116,7 +112,7 @@ bot.on('message', message => {
 	Reply to a discord message.
 
 	- parameters:
-		- message: The player message from discord text channel or DM channel.
+		- message: The player message from a discord text channel or DM channel.
 		- reply: The reply string.
 */
 function replyToDiscordMessage(message, reply) {
@@ -152,7 +148,7 @@ const dicordMessageCleaner = {
 	Load the story source code from a local file.	
 
 	- parameters:
-		path: The file relative path.
+		path: A string reprensenting the relative path to the file.
 
 	- returns:
 		The story source as an utf-8 string.
@@ -169,7 +165,7 @@ function loadStoryFromFile(path) {
 	Load the story source from an url and parse it.
 
 	- parammeters: 
-		url: The url of the story source with an http: or file: protocol.
+		url: The story source URL with an http: or file: protocol.
 	
 	- returns:
 		A promise with the story source code.

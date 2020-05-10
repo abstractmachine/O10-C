@@ -9,15 +9,13 @@
   <script src='../../src/zorkdown.js'></script>
   <script>
     let zork = null
-
-
     var converter = new showdown.Converter();
     converter.setOption('simpleLineBreaks', true)
     
-   
     function zorkdown_init() {
       console.log('init')
-      let source = getSource('https://github.com/happycodefarm/O10-C/blob/master/examples/story-example.txt').then((source) =>{
+      let source = getSource('https://happycodefarm.github.io/O10-C/examples/story-example.md')
+      .then((source) =>{
         zork = new Zorkdown(source)
         console.log(zork)
         const user_input = document.getElementById('zorkdown-user-input')
@@ -30,12 +28,11 @@
       }).catch((e)=> {
         console.log('Zork error')
         console.log(e)
-        })
-    
+      })
     }
     
     function validate(event) {
-      if (event.keyCode === 13) {
+      if (event.keyCode !== 13) return
         
       event.preventDefault()
       const input = event.target.innerHTML.replace('<br><br>', '')
@@ -44,13 +41,10 @@
       message.content = input.toLowerCase().trim()
       
       let place = zork.getPlaceByName(zork.story.currentPlace)
-
       let reply = zork.parseMessage(message.content, place)
       event.target.innerHTML = ''
       
       var html = converter.makeHtml(reply)
-    
-
       const terminal = document.getElementById('zorkdown-terminal')
       terminal.innerHTML += '<p>> ' + input + '</p><p> ' + html + '</p>'
       terminal.scrollTop = terminal.scrollHeight
@@ -67,10 +61,9 @@
         message.content = 'look'
         reply = zork.parseMessage(message.content, place)
         var html = converter.makeHtml(reply)
-        textarea.innerHTML += '<p> ' + html + '</p>'
-        textarea.scrollTop = textarea.scrollHeight
+        terminal.innerHTML += '<p> ' + html + '</p>'
+        terminal.scrollTop = terminal.scrollHeight
       }
-    }
   }
     
     function getSource(url) {

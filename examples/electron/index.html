@@ -3,6 +3,8 @@
 <head>
 	<meta charset="utf-8" />
   <title>O10-C</title>
+  <meta name="description" content="An html/javascript example of the Zorkdown textual game engine implemented in a simple web page.">
+  <meta name="author" content="abstractmachine, a line, Bergamote, flatland666, Flore G, Juste Leblanc, Velvet">
   <script>
     const {ipcRenderer} = require('electron')
     const {showdown} = require('showdown')
@@ -18,16 +20,15 @@
     }
 
     ipcRenderer.on('main-message', function(event, args) {
-      console.log(args);
       try {
         const message = JSON.parse(args)
         const textarea = document.getElementById('terminal')
         const user_input = document.getElementById('user-input')
         textarea.innerHTML += message.content + "<br>"
-        user_input.scrollIntoView();
+        user_input.scrollIntoView()
         user_input.focus()
       } catch (err) {
-					console.log("error json parse: " + err);
+					console.log("error json parse: " + err)
       }
     })
 
@@ -43,7 +44,6 @@
         const textarea = document.getElementById('terminal')
         textarea.innerHTML += '<p>> ' + message + '</p>'
         textarea.scrollTop = textarea.scrollHeight
-
       }
     }
   </script>

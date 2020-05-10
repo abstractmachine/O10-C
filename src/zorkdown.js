@@ -1,4 +1,3 @@
-
 /**
 zorkdown.js
 ========
@@ -66,6 +65,10 @@ class Zorkdown {
     if (place == null || !place.hasOwnProperty("actions")) {
       return "There is nothing to do here..."
     }
+
+    if (message == 'inventory') return this.getInventory()
+    if (message == 'map') return this.getMap()
+
     // rechercher une action correspondant au message dans le salon actuel
     let action = this.findMatchingAction(message, place.actions)
     // si aucune action trouvée, faire une recherche dans les reponses par default
@@ -363,11 +366,12 @@ class Zorkdown {
     The inventory list all the story states with a description that are true.
 
   - returns:
-    A string with the inventoy list
+    A string with the inventoy list.
   */
   getInventory() {
     let inventory = []
-    for (const state in this.story.states) {     
+    for (const state in this.story.states) {  
+      console.log(`${state} : ${this.story.states[state].state}, ${this.story.states[state].description}`)   
       if (this.story.states[state].state == true && this.story.states[state].description !== null) {
         inventory.push(this.story.states[state].description)
       }
@@ -375,6 +379,48 @@ class Zorkdown {
     if (inventory.length > 0) return "You have:\n- "+inventory.join("\n- ")
     else return "You are empty handed."
   }
+
+  /**
+  Get a 'map' of the game story.
+
+  - returns:
+    A json object reprsenting the story map.
+  */
+  getMap() {
+    let map = {
+      "places":[]
+    }
+
+    let regex = /{\s*(@)\s*([^}\n\r]*)}/gm
+
+    for (const place of this.story.places) {
+      let placeObject = {"name":place.name, "connection":[]}
+      
+      for (const action of place.actions) {
+        for (const response of action.responses) {
+          for (const pass of response.pass) {
+            let results = [...pass.matchAll(regex)]
+            for (const result of results) {
+              let placename = result[2]
+              placeObject["connection"].push(placename)
+            }
+          }
+          for (const fail of response.fail) {
+            let results = [...fail.matchAll(regex)]
+            for (const result of results) {
+              let placename = result[2]
+              placeObject["connection"].push(placename)
+            }
+          }
+        }
+      }
+      // remove duplicates in array
+      placeObject["connection"] = placeObject["connection"].filter((v, i, a) => a.indexOf(v) === i)
+      map["places"].push(placeObject)
+    }
+    console.log(map)
+  }
+
   /**
   Return the emptiness of an object.
   
