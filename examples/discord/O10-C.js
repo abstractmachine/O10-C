@@ -77,11 +77,8 @@ bot.on('message', message => {
 				console.log(e)
 			})
 
-			
 			return
-		}
-		
-		if (message.content == "map") {
+		} else if (message.content == "map") {
 			replyToDiscordMessage(message, getMap())
 			return
 		}
