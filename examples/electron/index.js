@@ -26,10 +26,10 @@ const showdown = require('showdown')
 const zorkdown = require('../../src/zorkdown.js')
 
 let zorkdown_instance = null
-
+let win = null
 function createWindow () {
   // Create the browser window.
-  let win = new BrowserWindow({
+  win = new BrowserWindow({
     width: 900,
     height: 600,
     'minHeight': 500,
@@ -39,24 +39,13 @@ function createWindow () {
       nodeIntegration: true
     }
   })
-
   win.loadFile('./index.html')
   const settings = loadSettings()
 
   fetchStory(settings.storyUrl).then((source) =>{
     zorkdown_instance = new zorkdown(source)
-    console.log(zorkdown_instance)
-    const place = zorkdown_instance.getPlaceByName(zorkdown_instance.story.currentPlace)
-    let message = {}
-    message.content = "look"
-
-    var converter = new showdown.Converter();
-    converter.setOption('simpleLineBreaks', true)
-    
-    var html = converter.makeHtml(zorkdown_instance.parseMessage(message.content, place))
-    var reply = {"content":html}
-    
-    win.webContents.send('main-message', JSON.stringify(reply))
+    //console.log(zorkdown_instance)
+    startGame()
   }).catch((e)=> {
     console.log("Zorkdown error")
     console.log(e)
@@ -90,6 +79,55 @@ function createWindow () {
   })
 }
 
+function startGame(){
+  const place = zorkdown_instance.getPlaceByName(zorkdown_instance.story.currentPlace)
+  let message = {}
+  message.content = "look"
+
+  var converter = new showdown.Converter();
+  converter.setOption('simpleLineBreaks', true)
+  
+  var html = converter.makeHtml(zorkdown_instance.parseMessage(message.content, place))
+  var reply = {"content":html}
+  win.webContents.send('reset')
+  win.webContents.send('main-message', JSON.stringify(reply))
+}
+
+function showOpen() { 
+
+  const {dialog} = require('electron')
+  var showOpenDialogOptions = {
+    properties: [ 'openFile' ],
+    filters: [ { extensions: [ 'txt' , 'md'] } ]
+  }
+
+  dialog.showOpenDialog(showOpenDialogOptions)
+    .then((data) => {
+      console.log(data.filePaths)
+      if(data.filePaths === undefined) { 
+        console.log("No file selected")
+      } else {     
+        readFile(data.filePaths[0])
+      } 
+  })
+}
+
+function readFile(filepath) { 
+  const fs = require('fs')
+  fs.readFile(filepath, 'utf-8', (err, data) => { 
+     if(err){ 
+        alert("An error ocurred reading the file :" + err.message) 
+        return 
+     } 
+     console.log(data)
+     // handle the file content 
+     zorkdown_instance = new zorkdown(data)
+     //win.reload()
+    startGame()
+     
+  }) 
+} 
+
 const isMac = process.platform === 'darwin'
 
 const template = [
@@ -112,7 +150,13 @@ const template = [
   {
     label: 'File',
     submenu: [
+      {label: 'Open',
+        click: function() { showOpen() },
+        accelerator: 'CmdOrCtrl+O'
+      },
+    
       isMac ? { role: 'close' } : { role: 'quit' }
+      
     ]
   },
   // { role: 'editMenu' }

@@ -32,6 +32,16 @@
       }
     })
 
+    ipcRenderer.on('reset', function(event, args) {
+     
+      const textarea = document.getElementById('terminal')
+      const user_input = document.getElementById('user-input')
+      textarea.innerHTML = ""
+      user_input.innerHTML = ""
+      user_input.scrollIntoView()
+      user_input.focus()
+    })
+
     function validate(event) {
       
       if (event.keyCode === 13) {

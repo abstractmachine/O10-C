@@ -67,7 +67,6 @@ class Zorkdown {
     }
 
     if (message == 'inventory') return this.getInventory()
-    if (message == 'map') return this.getMap()
 
     // rechercher une action correspondant au message dans le salon actuel
     let action = this.findMatchingAction(message, place.actions)
@@ -79,7 +78,8 @@ class Zorkdown {
     if (action == null) {
       action = this.findMatchingAction("*", this.story.defaults.actions)
     }
-  
+    if (action == null) return null
+
     for (const response of action.responses) {
       if (!this.isEmpty(response.conditions)) { // la réponse est soumise à condition(s)
         let ok = true
@@ -395,7 +395,7 @@ class Zorkdown {
     let regex = /{\s*(@)\s*([^}\n\r]*)}/gm
 
     for (const place of this.story.places) {
-      let placeObject = {"name":place.name, "connection":[]}
+      let placeObject = {"name":place.name, "connections":[]}
       
       for (const action of place.actions) {
         for (const response of action.responses) {
@@ -403,23 +403,24 @@ class Zorkdown {
             let results = [...pass.matchAll(regex)]
             for (const result of results) {
               let placename = result[2]
-              placeObject["connection"].push(placename)
+              placeObject["connections"].push(placename)
             }
           }
           for (const fail of response.fail) {
             let results = [...fail.matchAll(regex)]
             for (const result of results) {
               let placename = result[2]
-              placeObject["connection"].push(placename)
+              placeObject["connections"].push(placename)
             }
           }
         }
       }
       // remove duplicates in array
-      placeObject["connection"] = placeObject["connection"].filter((v, i, a) => a.indexOf(v) === i)
+      placeObject["connections"] = placeObject["connections"].filter((v, i, a) => a.indexOf(v) === i)
       map["places"].push(placeObject)
     }
-    console.log(map)
+    //console.log(map)
+    return map
   }
 
   /**

@@ -59,8 +59,8 @@ bot.on('message', message => {
 			return
 		}
 
-		if (message.content == "inventory") {
-			replyToDiscordMessage(message, zork.getInventory())
+		if (message.content == "map") {
+			replyToDiscordMessage(message, getMap())
 			return
 		}
 
@@ -76,9 +76,16 @@ bot.on('message', message => {
 				console.log("Zork error")
 				console.log(e)
 			})
+
+			
 			return
 		}
 		
+		if (message.content == "map") {
+			replyToDiscordMessage(message, getMap())
+			return
+		}
+
 		const reply = zork.parseMessage(message.content, place)
 		replyToDiscordMessage(message, reply)
 	}
@@ -107,6 +114,25 @@ bot.on('message', message => {
 		}
 	}
 })
+
+/**
+	Get the 'map' represnetation of the game.
+
+	- returns:
+		A string concontaining a list of the game places and their connections to other places. 
+*/
+function getMap(){
+	// get the 'map' of the game.
+	let map = zork.getMap()
+	let mapString = 'The map:\n'
+	for (const place of map['places']) {
+		mapString += `#${place['name']}\n`
+		for (const connetion of place['connections']) {
+			mapString += `\t- ${connetion}\n`
+		}
+	}
+	return mapString
+}
 
 /**
 	Reply to a discord message.
