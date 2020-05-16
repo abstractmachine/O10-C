@@ -207,7 +207,6 @@ function fetchStory(url) {
 					.then(body => resolve(body))
 					.catch(err => console.error(err))
 			}
-			
 		} catch (e) {
 			console.log(e.message)
 			reject("File not found.")
@@ -240,7 +239,6 @@ function loadSettings() {
 function logGameToFile(log) {
 	if (settings.logGame != true) return
 	const date = new Date()
-
 	const logStream = fs.createWriteStream(__dirname+'/log.txt', {flags: 'a'});
 	logStream.write(date.toLocaleString()+'\t'+log+'\n');
 	logStream.end();
