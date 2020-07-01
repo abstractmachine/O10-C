@@ -32,8 +32,8 @@ class Zorkdown {
   
   - parameters:
     source: The Zorkdown story source code string.
-    
-    */
+  
+  */
   constructor(source) {
  
     this.story = {

@@ -16,7 +16,26 @@
       console.log('init')
       let source = getSource('https://happycodefarm.github.io/O10-C/examples/story-example.md')
       .then((source) =>{
+        let savedGame = localStorage.getItem("savedGame")
+        
         zork = new Zorkdown(source)
+
+        if (savedGame !== null) {
+          if (confirm('Do you want to restore the game from its previous state ?')) {
+            try {
+              savedGame = JSON.parse(savedGame)
+              zork.story.states = savedGame.states
+              zork.story.currentPlace = savedGame.currentPlace
+            } catch (e) {
+              console.log("Error parsing saved game data")
+              localStorage.removeItem('savedGame')
+            }
+            console.log('Rertoring game data')
+          } else {
+            localStorage.removeItem('savedGame')
+          }
+        }
+        
         console.log(zork)
         let place = zork.getPlaceByName(zork.story.currentPlace)
         reply = zork.parseMessage("look", place)
@@ -73,6 +92,16 @@
         terminal.innerHTML += '<p> ' + html + '</p>'
         terminal.scrollTop = terminal.scrollHeight
       }
+
+      // saving game state
+      let savedGame = {
+        currentPlace: zork.story.currentPlace,
+        states: zork.story.states
+      }
+      localStorage.setItem("savedGame", JSON.stringify(savedGame))
+      console.log('saving game')
+      console.log(savedGame)
+
   }
     
     function getSource(url) {

@@ -163,11 +163,6 @@ const dicordMessageCleaner = {
 }
 
 /**
-	Some utilities
-	==============
-*/
-
-/**
 	Load the story source code from a local file.	
 
 	- parameters:
@@ -175,7 +170,7 @@ const dicordMessageCleaner = {
 
 	- returns:
 		The story source as an utf-8 string.
-	*/
+*/
 function loadStoryFromFile(path) {
     try {
         const data = fs.readFileSync(path, 'utf8')
@@ -184,6 +179,7 @@ function loadStoryFromFile(path) {
         console.error(err)
 	}
 }
+
 /**
 	Load the story source from an url and parse it.
 
@@ -192,7 +188,7 @@ function loadStoryFromFile(path) {
 	
 	- returns:
 		A promise with the story source code.
-	*/
+*/
 function fetchStory(url) {
 	return new Promise(function(resolve, reject) {
 		try { 	
@@ -219,7 +215,7 @@ function fetchStory(url) {
 
 	- returns:
 		The settings as an object.
-	*/
+*/
 function loadSettings() {
     try {
 		const data = fs.readFileSync(__dirname+'/settings.json', 'utf8')
@@ -235,7 +231,7 @@ function loadSettings() {
 
 	- parameters:
 		log: The string to be logged.
-	*/
+*/
 function logGameToFile(log) {
 	if (settings.logGame != true) return
 	const date = new Date()
