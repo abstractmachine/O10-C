@@ -1,6 +1,6 @@
 {
-    "discordToken": "NjkwMTI5NjkxMzkwMzc3OTk4.XqP8fQ.Iwsucq0qG9ryZaEHM59JrhkzEMs",
-    "storyUrl": "https://hackmd.io/YXmNK5k5TdKTKhbpelbbWw/download",
+    "discordToken": "DISCORD-TOKEN-HERE",
+    "storyUrl": "https://happycodefarm.github.io/O10-C/examples/story-example.md",
     "logGame" : true,
     "directMessageMode": true,
     "cleanUpMessages": true,
