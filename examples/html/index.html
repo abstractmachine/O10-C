@@ -20,7 +20,7 @@
         
         zork = new Zorkdown(source)
 
-        if (savedGame !== null) {
+        if (savedGame !== null) { // Game restoration
           if (confirm('Do you want to restore the game from its previous state ?')) {
             try {
               savedGame = JSON.parse(savedGame)
