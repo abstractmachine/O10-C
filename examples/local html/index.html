@@ -1,0 +1,230 @@
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="description" content="The zorkdown game engine html example">
+  <title>zorkdown html example</title>
+  <link rel='stylesheet' href='style.css' type='text/css'>
+  
+  <script src='lib/showdown/dist/showdown.min.js'></script>
+  <script src='../../src/zorkdown.js'></script>
+  <script>
+    let zork = null
+    let converter = new showdown.Converter();
+    converter.setOption('simpleLineBreaks', true)
+    let editing = false
+
+    function zorkdownInit(game) {
+      console.log(`loading ${game}`)
+      let source = localStorage.getItem(game)
+      if (source != null) {
+        console.log("loaded ok")
+        zork = new Zorkdown(source)
+        let savedGame = localStorage.getItem("savedZorkDownGame")
+        if (savedGame !== null) { // Game restoration
+          if (confirm('Do you want to restore the game from its previous state ?')) {
+            try {
+              savedGame = JSON.parse(savedGame)
+              zork.story.states = savedGame.states
+              zork.story.currentPlace = savedGame.currentPlace
+              document.getElementById("place").innerHTML = zork.story.currentPlace
+
+            } catch (e) {
+              console.log("Error parsing saved game data")
+              localStorage.removeItem('savedZorkDownGame')
+            }
+            console.log('Rertoring game data')
+          } else {
+            localStorage.removeItem('savedZorkDownGame')
+          }
+        }
+        
+        console.log(zork)
+        let place = zork.getPlaceByName(zork.story.currentPlace)
+        reply = zork.parseMessage("look", place)
+
+        var html = converter.makeHtml(reply)
+        const terminal = document.getElementById('zorkdown-terminal')
+
+        terminal.innerHTML += '<p> ' + html + '</p>'
+        terminal.scrollTop = terminal.scrollHeight
+
+        const user_input = document.getElementById('zorkdown-user-input')
+        document.getElementById('zorkdown-title').innerHTML = game.substr(9)
+        user_input.addEventListener('keyup', validate)
+        document.addEventListener('keydown', refocus);
+
+        document.getElementById("place").innerHTML = zork.story.currentPlace
+
+        function refocus(e) {
+          if(!editing) user_input.focus()
+        }
+      } else {
+        alert("No source")
+      }
+    }
+    
+    function validate(event) {
+      if (event.keyCode !== 13) return
+        
+      event.preventDefault()
+      const input = event.target.innerHTML.replace('<br><br>', '')
+      
+      let message = {}
+      message.content = input.toLowerCase().trim()
+      
+      let place = zork.getPlaceByName(zork.story.currentPlace)
+      let reply = zork.parseMessage(message.content, place)
+      event.target.innerHTML = ''
+      
+      var html = converter.makeHtml(reply)
+      const terminal = document.getElementById('zorkdown-terminal')
+      terminal.innerHTML += '<p>> ' + input + '</p><p> ' + html + '</p>'
+      terminal.scrollTop = terminal.scrollHeight
+      
+      const user_input = document.getElementById('zorkdown-user-input')
+      user_input.focus()
+      
+      const zork_content = document.getElementById('zorkdown-content')
+      zork_content.scrollTop = zork_content.scrollHeight
+      
+      if (zork.story.placeChanged) {
+        place = zork.getPlaceByName(zork.story.currentPlace)
+        zork.story.placeChanged = false
+        message.content = 'look'
+        reply = zork.parseMessage(message.content, place)
+        var html = converter.makeHtml(reply)
+        terminal.innerHTML += '<p> ' + html + '</p>'
+        terminal.scrollTop = terminal.scrollHeight
+        document.getElementById("place").innerHTML = place.name
+      }
+
+      // saving game state
+      let savedGame = {
+        currentPlace: zork.story.currentPlace,
+        states: zork.story.states
+      }
+
+      localStorage.setItem("savedZorkDownGame", JSON.stringify(savedGame))
+      console.log('saving game')
+      console.log(savedGame)
+  }
+    
+  function newGame(game) {
+    let newGameTitle = prompt("New Game Title ?").trim()
+    if (newGameTitle!= null && newGameTitle!= "") {
+
+      if (localStorage.hasOwnProperty(`ZorkDown-${newGameTitle}`)) {
+        alert(`A game named "${newGameTitle}" allready exist!`)
+        return
+      }
+      localStorage.setItem("currentZorkDownGame", `ZorkDown-${newGameTitle}`)
+      localStorage.setItem(`ZorkDown-${newGameTitle.trim()}`, `! *\n+ Hello World! \n\n#${newGameTitle}\n! look\n+ This is a brave new world`)
+      
+      let currentGameTitle = localStorage.getItem("currentZorkDownGame")
+      if (currentGameTitle!=null) {
+        console.log(currentGameTitle)
+        document.getElementById('zorkdown-terminal').innerHTML = ""
+        localStorage.removeItem("savedZorkDownGame")
+        zorkdownInit(currentGameTitle)
+      } else {
+        alert("dang")
+      }
+    }
+  }
+
+  function loadGame() {
+    let gameList = []
+    for (var key in localStorage){
+      if (key.startsWith("ZorkDown-"))
+        gameList.push(key.substr(9))
+    }
+    let gameTitle = prompt(`Load a game\n\n- ${gameList.join("\n- ")}`).trim()
+    if (gameTitle != null) {
+      
+      let currentGame = localStorage.getItem(`ZorkDown-${gameTitle}`)
+
+      if (currentGame!=null) {
+        document.getElementById('zorkdown-terminal').innerHTML = ""
+        localStorage.removeItem("savedZorkDownGame")
+        localStorage.setItem("currentZorkDownGame", `ZorkDown-${gameTitle}`)
+        zorkdownInit(`ZorkDown-${gameTitle}`)
+      } else {
+        alert(`No game named "${gameTitle}"`)
+      }
+    }
+  }
+
+  function editGame(gameTitle) {
+    console.log('edit')
+    editing = true
+    document.getElementById('zorkdown-source-input').value = localStorage.getItem(gameTitle)
+
+    document.getElementById('zorkdown-source-input').style.display = "block"
+    document.getElementById('zorkdown-new').style.display = "none"
+    document.getElementById('zorkdown-load').style.display = "none"
+    document.getElementById('zorkdown-edit').style.display = "none"
+    document.getElementById('zorkdown-save').style.display = "block"
+    document.getElementById('zorkdown-cancel').style.display = "block"
+  }
+
+  function saveGame(gameTitle) {
+    editing = false
+    localStorage.setItem(gameTitle, document.getElementById('zorkdown-source-input').value)
+    document.getElementById('zorkdown-terminal').innerHTML = ""
+
+    document.getElementById('zorkdown-source-input').style.display = "none"
+    document.getElementById('zorkdown-new').style.display = "block"
+    document.getElementById('zorkdown-load').style.display = "block"
+    document.getElementById('zorkdown-edit').style.display = "block"
+
+    document.getElementById('zorkdown-save').style.display = "none"
+    document.getElementById('zorkdown-cancel').style.display = "none"
+
+    zorkdownInit(gameTitle)
+  }
+
+  function cancelEditGame() {
+    editing = false
+    document.getElementById('zorkdown-source-input').style.display = "none"
+    document.getElementById('zorkdown-new').style.display = "block"
+    document.getElementById('zorkdown-load').style.display = "block"
+    document.getElementById('zorkdown-edit').style.display = "block"
+
+    document.getElementById('zorkdown-save').style.display = "none"
+    document.getElementById('zorkdown-cancel').style.display = "none"
+  }
+
+  </script>
+</head>
+<body>
+
+  <div id="topbar">
+    <div id="info">
+      <p id='zorkdown-title'></p>
+      <p id="place">nowhere</p>
+    </div>
+    <div id="buttons">
+      <button id="zorkdown-new" value="new" onclick="newGame()">new</button>
+      <button id="zorkdown-load" value="new" onclick="loadGame(localStorage.getItem('currentZorkDownGame'))">load</button>
+      <button id="zorkdown-edit" value="edit" onclick="editGame(localStorage.getItem('currentZorkDownGame'))">edit</button>
+      <button id="zorkdown-save" value="save" style="display:none" onclick="saveGame(localStorage.getItem('currentZorkDownGame'))">save</button>
+      <button id="zorkdown-cancel" value="cancel" style="display:none" onclick="cancelEditGame()">cancel</button>
+    </div>
+  </div>
+
+  <div class='zorkdown-content' id='zorkdown-content'>
+    <div id='zorkdown-terminal' class='zorkdown-terminal'></div>
+    <span id='zorkdown-user-input' class='zorkdown-user-input' contenteditable autofocus></span>
+    <textarea id='zorkdown-source-input' class='zorkdown-source-input'></textarea>
+  </div>
+
+<script>
+  var currentGame = localStorage.getItem("currentZorkDownGame")
+  if (currentGame!=null) {
+    zorkdownInit(currentGame)
+  } else {
+    
+  }
+</script>
+</body>
+</html>
