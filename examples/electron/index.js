@@ -98,7 +98,7 @@ function showOpen() {
   const {dialog} = require('electron')
   var showOpenDialogOptions = {
     properties: [ 'openFile' ],
-    filters: [ { extensions: [ 'txt' , 'md'] } ]
+    filters: [ { extensions: [ 'txt' , 'md', 'zd'] } ]
   }
 
   dialog.showOpenDialog(showOpenDialogOptions)

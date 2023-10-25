@@ -49,7 +49,7 @@
         terminal.scrollTop = terminal.scrollHeight
 
         const user_input = document.getElementById('zorkdown-user-input')
-        document.getElementById('zorkdown-title').innerHTML = game.substr(9)
+        document.getElementById('title').innerHTML = game.substr(9)
         user_input.addEventListener('keyup', validate)
         document.addEventListener('keydown', refocus);
 
@@ -163,8 +163,10 @@
     document.getElementById('zorkdown-new').style.display = "none"
     document.getElementById('zorkdown-load').style.display = "none"
     document.getElementById('zorkdown-edit').style.display = "none"
+
     document.getElementById('zorkdown-save').style.display = "block"
     document.getElementById('zorkdown-cancel').style.display = "block"
+    document.getElementById('zorkdown-export').style.display = "block"
   }
 
   function saveGame(gameTitle) {
@@ -179,6 +181,7 @@
 
     document.getElementById('zorkdown-save').style.display = "none"
     document.getElementById('zorkdown-cancel').style.display = "none"
+    document.getElementById('zorkdown-export').style.display = "none"
 
     zorkdownInit(gameTitle)
   }
@@ -192,6 +195,23 @@
 
     document.getElementById('zorkdown-save').style.display = "none"
     document.getElementById('zorkdown-cancel').style.display = "none"
+    document.getElementById('zorkdown-export').style.display = "none"
+  }
+
+  function exportGame() {
+    let source = document.getElementById('zorkdown-source-input').value
+
+    var element = document.createElement('a');
+    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(source));
+    element.setAttribute('download', localStorage.getItem('currentZorkDownGame')+".zd");
+
+    element.style.display = 'none';
+    document.body.appendChild(element);
+
+    element.click();
+
+    document.body.removeChild(element);
+
   }
 
   </script>
@@ -200,7 +220,7 @@
 
   <div id="topbar">
     <div id="info">
-      <p id='zorkdown-title'></p>
+      <p id='title'></p>
       <p id="place">nowhere</p>
     </div>
     <div id="buttons">
@@ -209,6 +229,7 @@
       <button id="zorkdown-edit" value="edit" onclick="editGame(localStorage.getItem('currentZorkDownGame'))">edit</button>
       <button id="zorkdown-save" value="save" style="display:none" onclick="saveGame(localStorage.getItem('currentZorkDownGame'))">save</button>
       <button id="zorkdown-cancel" value="cancel" style="display:none" onclick="cancelEditGame()">cancel</button>
+      <button id="zorkdown-export" value="export" style="display:none" onclick="exportGame()">export</button>
     </div>
   </div>
 
