@@ -12,7 +12,7 @@ zorkdown.js
   - Velvet
 
 - version:
-  0.2
+  0.3
 
 A single-file, single-class Zork-like interactive text game engine.
 It interprets a lightweight markup language called Zorkdown .
@@ -45,10 +45,21 @@ class Zorkdown {
       source: null
     } // The main story object
 
+    this.placeChangedCallback = null
     this.story.source = source
     this.parseStory(source)
   }
   
+  placeChanged() {
+    if (typeof this.placeChangedCallback === 'function') {
+      this.placeChangedCallback()
+    }
+  }
+
+  setPlaceChangedCallbackFunction(callback) {
+    this.placeChangedCallback = callback
+  }
+
   /**
   Parse a player message and return an answer.
 
@@ -146,13 +157,15 @@ class Zorkdown {
       let variable = result[2]
       
       if (operator == "@") { // 'change place' command
-      this.story.currentPlace = variable
+        this.story.currentPlace = variable
         console.log(`We are now in ${this.story.currentPlace}`)
         this.story.placeChanged = true
+        this.placeChanged()
       } else if (operator == "=") { // 'death' command
         if (variable == "DEATH") {
           this.parseStory(this.story.source) // restart the game
           this.story.placeChanged = true
+          this.placeChanged()
         }	
       } else { // property setter (+ or -)
         let split = variable.split(/(\-\>)/).filter( e => e.trim().length > 0) 
@@ -180,7 +193,7 @@ class Zorkdown {
     Parse the story source code and build the game structure from it.
   
     - parameters:
-      source: The O10-C markDown string source of the story.
+      source: The ZorkDown string source of the story.
     */
   parseStory(source) {
     const scenarioLines = source.split(/[\r\n]+/g)
@@ -198,10 +211,10 @@ class Zorkdown {
       return json
     }
     
-    let place, action, responses  
+    let place, action, responses, metadata 
     
     const placeTemplate = function (name) {
-      return { "name": name, "actions": [] }
+      return { "name": name, "actions": [], "data": {}}
     }
     
     const actionTemplate = function (commands) {
@@ -229,11 +242,21 @@ class Zorkdown {
           const placeName = line.substr(1).trim()
           place = placeTemplate(placeName)
           this.story.places.push(place) // add the new place to the story
-          break;	
+          break
+          
+        case "{":
+          lastTag = "{"
+          let data = JSON.parse(line.trim())
+          console.log(`data-> ${data}`)
+         for (var i in data) {
+          place.data[i] = data[i]
+         }
+         
+          console.log(place.data)
+          break
         case "!": // action(s) du salon
           lastTag = "!"
-          //let regexActions = /!\s*(.*)/ // trouver toutes les actions et synonymes : !fait ci / fait ça / fait quoi
-          //let allCommands = line.match(regexActions)[1].toLowerCase()
+          // trouver toutes les actions et synonymes : fait ci / fait ça / fait quoi
           let allCommands = line.substr(1).trim()
           let commands = allCommands.split(/\//g).map(s => s.trim()).filter( e => e.length > 0)// séparer les actions par /
           
@@ -313,7 +336,7 @@ class Zorkdown {
       placeName: The name of the place to find in story.
   
     - returns:
-        The matching place object or null on failure.
+      The matching place object or null on failure.
     */
   getPlaceByName(placeName) {
     for (const place of this.story.places) {
@@ -419,7 +442,6 @@ class Zorkdown {
       placeObject["connections"] = placeObject["connections"].filter((v, i, a) => a.indexOf(v) === i)
       map["places"].push(placeObject)
     }
-    //console.log(map)
     return map
   }
 

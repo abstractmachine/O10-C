@@ -19,6 +19,10 @@
       if (source != null) {
         console.log("loaded ok")
         zork = new Zorkdown(source)
+
+        zork.setPlaceChangedCallbackFunction(placeChangedCallBack)
+
+        
         let savedGame = localStorage.getItem("savedZorkDownGame")
         if (savedGame !== null) { // Game restoration
           if (confirm('Do you want to restore the game from its previous state ?')) {
@@ -63,6 +67,19 @@
       }
     }
     
+    function placeChangedCallBack() {
+      console.log('place changed!')
+      // let place = zork.getPlaceByName(zork.story.currentPlace)
+      // let message = {}
+      // message.content = 'look'
+      // let reply = zork.parseMessage(message.content, place)
+      // var html = converter.makeHtml(reply)
+      // const terminal = document.getElementById('zorkdown-terminal')
+      // terminal.innerHTML += '<p> ' + html + '</p>'
+      // terminal.scrollTop = terminal.scrollHeight
+      // document.getElementById("place").innerHTML = place.name
+    }
+
     function validate(event) {
       if (event.keyCode !== 13) return
         
@@ -118,7 +135,7 @@
         return
       }
       localStorage.setItem("currentZorkDownGame", `ZorkDown-${newGameTitle}`)
-      localStorage.setItem(`ZorkDown-${newGameTitle.trim()}`, `! *\n+ Hello World! \n\n#${newGameTitle}\n! look\n+ This is a brave new world`)
+      localStorage.setItem(`ZorkDown-${newGameTitle.trim()}`, `! *\n+ Hello World! Welcome to ${newGameTitle} \n\n#A random place\n! look\n+ This is a brave new world`)
       
       let currentGameTitle = localStorage.getItem("currentZorkDownGame")
       if (currentGameTitle!=null) {
