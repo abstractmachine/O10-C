@@ -1,3 +1,6 @@
 [submodule "examples/local html/lib/showdown"]
 	path = examples/local html/lib/showdown
 	url = https://github.com/showdownjs/showdown
+[submodule "examples/etherpad/lib/showdown"]
+	path = examples/etherpad/lib/showdown
+	url = https://github.com/showdownjs/showdown
