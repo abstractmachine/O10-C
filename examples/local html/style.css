@@ -23,14 +23,17 @@
   overflow-y: scroll;
 }
 
+.zorkdown-output {
+
+}
+
 .zorkdown-terminal {
   width: 100%;
   height: auto;
-  margin:0;
+  margin: 0;
   padding-bottom: 0;
   border: none;
 }
-
 
 p {
   margin: 0;
@@ -38,9 +41,15 @@ p {
   padding: 0;
 }
 
+ul {
+  margin: 0;
+  margin-left: 1em;
+  margin-bottom: 1em;
+  padding: 0;
+}
+
 .zorkdown-user-input {
-  padding: 0m;
-  padding-bottom: 0;
+  padding: 0;
   outline: none;
   border: none;
   font-family: monospace;
@@ -61,15 +70,13 @@ p {
 .zorkdown-user-input:empty::after {
   content: attr(placeholder);
   animation: blinker 1s linear infinite;
-
 }
 
 .zorkdown-source-input {
   display: none; /* Hidden by default */
-
   position: fixed; /* Sit on top of the page content */
   width: 100%; /* Full width (cover the whole page) */
-  height: 100%; /* Full height (cover the whole page) */
+  height: calc(100% - 3em); /* Full height (cover the whole page) */
   top: 3em;
   left: 0;
   right: 0;
@@ -77,7 +84,6 @@ p {
   z-index: 2; /* Specify a stack order in case you're using a different order for other elements */
 
   padding: 1em;
-  padding-bottom: 0;
   outline: none;
   border: none;
   font-family: monospace;
@@ -86,6 +92,8 @@ p {
   opacity: 90%;
   color: blanchedalmond;
   resize: none;
+
+  overflow-y: scroll;
 } 
 
 #topbar {

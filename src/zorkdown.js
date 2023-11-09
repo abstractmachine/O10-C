@@ -46,19 +46,31 @@ class Zorkdown {
     } // The main story object
 
     this.placeChangedCallback = null
+    this.errorCallback = null
     this.story.source = source
     this.parseStory(source)
   }
   
-  placeChanged() {
-    if (typeof this.placeChangedCallback === 'function') {
-      this.placeChangedCallback()
-    }
-  }
-
   setPlaceChangedCallbackFunction(callback) {
     this.placeChangedCallback = callback
   }
+
+  setErrorCallbackFunction(callback) {
+    this.errorCallback = callback
+  }
+
+  placeChanged(p) {
+    if (typeof this.placeChangedCallback === 'function') {
+      this.placeChangedCallback(p)
+    }
+  }
+
+  errorRaised(e) {
+    if (typeof this.errorCallback === 'function') {
+      this.errorCallback(e)
+    }
+  }
+
 
   /**
   Parse a player message and return an answer.
@@ -71,12 +83,12 @@ class Zorkdown {
     The message response string from the story engine.
   */
   parseMessage(message, place) {
+    message = message
     let reply = ""
     // juste au cas où le salon n'a pas d'actions définies
     if (place == null || !place.hasOwnProperty("actions")) {
       return "There is nothing to do here..."
     }
-
     if (message == 'inventory') return this.getInventory()
 
     // rechercher une action correspondant au message dans le salon actuel
@@ -85,26 +97,43 @@ class Zorkdown {
     if (action == null) {
       action = this.findMatchingAction(message, this.story.defaults.actions)
     }
-    // si aucune action par defaut trouvée, repondre par la reponse catch all
+    if (action == null) {
+      action = this.findMatchingAction("*", place.actions)
+    }
     if (action == null) {
       action = this.findMatchingAction("*", this.story.defaults.actions)
     }
     if (action == null) return null
+  
+    for (const response of action.responses) { // toutes les responses de l'action
+      let conditionsStates = []
 
-    for (const response of action.responses) {
       if (!this.isEmpty(response.conditions)) { // la réponse est soumise à condition(s)
-        let ok = true
-        for (const condition in response.conditions) {
-          if (this.story.states[condition].state != response.conditions[condition]) {
+      
+        let oneOk = false
+
+        for (const condition of response.conditions) { // tous les & 
+          let ok = true
+
+         for (const conditionPart in condition) {
+          
+          if (this.story.states[conditionPart] == null) console.log(`Parser warning: "${conditionPart}" not declared !`)
+          if ((this.story.states[conditionPart] != null) && (this.story.states[conditionPart].state != condition[conditionPart])) {
             // the condition is not reached
             ok = false
-            break;
-          }
+            break; // AND condition not satisfied, no needs to go further
+          } 
+         }
+         if (ok) { // OR condition satisfied
+          oneOk = true
+          break
+         } 
         }
-        let tmpReply = ok ? this.getPassedResponse(response) : this.getFailedResponse(response)
+        
+        let tmpReply = oneOk ? this.getPassedResponse(response) : this.getFailedResponse(response)
         tmpReply = this.computeReply(tmpReply)
         reply += tmpReply != null ? `${tmpReply} ` : ""
-        if (!ok && response.fail.length) {
+        if (!oneOk && response.fail.length) {
           break // stop going down to next condition when a condition failed to pass
         }
       } else reply =`${reply} ${this.computeReply(this.getPassedResponse(response))} `
@@ -149,40 +178,54 @@ class Zorkdown {
     */
   computeReply(reply) {
     if (reply == null) return null
-    let regexSetter = /{\s*(@|\+|-|=)\s*([^}\n\r]*)}/gm
+    let regexSetter = /{\s*(@|\+\+|\+|--|-|=)\s*([^}\n\r]*)}/gm
     let resultSetter = [...reply.matchAll(regexSetter)]
   
     for (const result of resultSetter) {
       let operator = result[1]
       let variable = result[2]
-      
       if (operator == "@") { // 'change place' command
-        this.story.currentPlace = variable
-        console.log(`We are now in ${this.story.currentPlace}`)
-        this.story.placeChanged = true
-        this.placeChanged()
+        
+        let newPlace = this.getPlaceByName(variable.toLowerCase())
+        if ((newPlace) !== null) {
+          this.story.currentPlace = variable
+          this.story.placeChanged = true
+          this.placeChanged(newPlace)
+        } else {
+          this.errorRaised(`Error: No place named ${variable}`)
+        }
+       
       } else if (operator == "=") { // 'death' command
-        if (variable == "DEATH") {
+        if (variable == "death") {
           this.parseStory(this.story.source) // restart the game
           this.story.placeChanged = true
           this.placeChanged()
         }	
-      } else { // property setter (+ or -)
+      } else { // property setter (+ or - or ++ or --)
         let split = variable.split(/(\-\>)/).filter( e => e.trim().length > 0) 
         let variableName = split[0].trim()
         let description = split[2] ? split[2].trim() : null
 
-        if (!this.story.states[variableName]) { // Add a state to the story.
+        if (!this.story.states[variableName]) { // Add the variable to the story.
+          let state
+          if (operator == "+") state = true
+          else if (operator == "-") state = false
+          else if (operator == "--") state = 0
+          else if (operator == "++") state = 1
           this.story.states[variableName] = {
-            "state": operator == "+" ? true : false,
+            "state": state,
             "description": description
           }
-          console.log(`${variableName} "${this.story.states[variableName].description}" is now : ${this.story.states[variableName].state}`)
 
-        } else { // The state exist, update it.
+        } else { // The variable allready exist, update it.
           if (description != null) this.story.states[variableName].description = description // set the variable description string for inventory
-          this.story.states[variableName].state = operator == "+" ? true : false
-          console.log(`${variableName} "${this.story.states[variableName].description}" is now : ${this.story.states[variableName].state}`)
+          let state
+          if (operator == "+") state = true
+          else if (operator == "-") state = false
+          else if (operator == "--") state = this.story.states[variableName].state - 1
+          else if (operator == "++") state = this.story.states[variableName].state + 1
+
+          this.story.states[variableName].state = state
         }
       }		
     }
@@ -196,6 +239,7 @@ class Zorkdown {
       source: The ZorkDown string source of the story.
     */
   parseStory(source) {
+    
     const scenarioLines = source.split(/[\r\n]+/g)
 
     // restet strory properties
@@ -229,9 +273,11 @@ class Zorkdown {
 
     place = placeTemplate("everywhere")
     this.story.defaults = place
-
-    for (const lineIndex in scenarioLines) {
-      const line = scenarioLines[lineIndex]
+    let lineIndex = 0
+    let line = ""
+    try {
+    for (lineIndex in scenarioLines) {
+      line = scenarioLines[lineIndex]
       
       switch(line.trim()[0]) {
         case "#": // nouveau salon
@@ -239,7 +285,7 @@ class Zorkdown {
           action = null
           responses = null
           // créer un nouvel objet place avec son nom
-          const placeName = line.substr(1).trim()
+          const placeName = line.substring(1).trim()
           place = placeTemplate(placeName)
           this.story.places.push(place) // add the new place to the story
           break
@@ -247,17 +293,14 @@ class Zorkdown {
         case "{":
           lastTag = "{"
           let data = JSON.parse(line.trim())
-          console.log(`data-> ${data}`)
-         for (var i in data) {
-          place.data[i] = data[i]
-         }
-         
-          console.log(place.data)
+          for (var i in data) {
+            place.data[i] = data[i]
+          }
           break
         case "!": // action(s) du salon
           lastTag = "!"
           // trouver toutes les actions et synonymes : fait ci / fait ça / fait quoi
-          let allCommands = line.substr(1).trim()
+          let allCommands = line.substring(1).trim()
           let commands = allCommands.split(/\//g).map(s => s.trim()).filter( e => e.length > 0)// séparer les actions par /
           
           action = actionTemplate(commands)
@@ -268,28 +311,36 @@ class Zorkdown {
         case "?": // condition de réaction
           lastTag = "?"
           responses = responsesTemplate()
-          let allConditions = line.substr(1).trim()
-          let conditionList = allConditions.split(/\&/g).map(s => s.trim()).filter( e => e.length > 0)// séparer les conditions par &
-          let conditions = {}
-          for (const condition of conditionList) {
-            
-            if (condition[0]=="!") {
-              conditions[condition.substr(1).trim()] = false // negative condition
-              
-              this.story.states[condition.substr(1).trim()]={
-                "state":false,
-                "description": null
-              }
-            } else {
-            
-              conditions[condition] = true // positive condition
-              this.story.states[condition]= {
-                "state":false,
-                "description": null
+          let allConditions = line.substring(1).trim()
+
+          // AND OR order of operations
+          // evaluate AND first
+          // midi & faim / midi & soif == (midi & faim) / (midi & soif)
+          let conditionOr = allConditions.split(/\//g).map(s => s.trim()).filter( e => e.length > 0)// séparer les bloc de conditions par /
+          let conditionsGroup = []
+          
+          for (const conditionsAnd of conditionOr) { // les groupes de /
+            let conditions = conditionsAnd.split(/\&/g).map(s => s.trim()).filter( e => e.length > 0)// séparer les conditions par &
+            let conditionsParts = {}
+            for (const condition of conditions) { // les groupes de &
+              if (condition[0]=="!") {
+                conditionsParts[condition.substring(1).trim()]= false
+                this.story.states[condition.substring(1).trim()] = {
+                  "state":false,
+                  "description": null
+                }
+              } else {
+                conditionsParts[condition]= true
+                this.story.states[condition] = {
+                  "state":false,
+                  "description": null
+                }
               }
             }
+            conditionsGroup.push(conditionsParts)
           }
-          responses.conditions = conditions
+     
+          responses.conditions = conditionsGroup
           action.responses.push(responses)
           break;	
         case "+": // pass condition 
@@ -298,7 +349,7 @@ class Zorkdown {
             responses = responsesTemplate()
             action.responses.push(responses)
           }
-          let positiveResponse = line.substr(1).trim()
+          let positiveResponse = line.substring(1).trim()
           responses.pass.push(positiveResponse)
           break;
         case "-": // fail condition
@@ -307,7 +358,7 @@ class Zorkdown {
             responses = responsesTemplate()
             action.responses.push(responses)
           }
-          let negativeResponse = line.substr(1).trim()
+          let negativeResponse = line.substring(1).trim()
           responses.fail.push(negativeResponse)
           break
         case ">": // ignore commented lines
@@ -319,13 +370,15 @@ class Zorkdown {
             } else if(lastTag == "-") {
               responses.fail[responses.fail.length - 1] += `\n${line}`
             } else {
-              console.log(`Warning, syntaxe error at line ${lineIndex}`)
-              console.log(line)
+              this.errorRaised(`Warning, syntaxe error at line ${line}`)
             }
           }
-          
       }
     }	
+  } catch (e) {
+    this.errorRaised(`Error parsing source code at line ${lineIndex} near ${line}`)
+    alert(`Error parsing source code at line ${lineIndex} near ${line}`)
+  }
     this.story.currentPlace = this.story.places[0].name
   }
   
@@ -340,11 +393,12 @@ class Zorkdown {
     */
   getPlaceByName(placeName) {
     for (const place of this.story.places) {
-      if (place.name == placeName) {
+      if (place.name.toLowerCase() == placeName.toLowerCase()) {
         return place
       }
     }
-    console.log(`no place named ${placeName}`)
+    this.errorRaised(`Error: no place named ${placeName}`)
+
     // no place with that name, return null
     return null
   }
@@ -360,14 +414,25 @@ class Zorkdown {
       An object with the matching answers or null if none was found. 
     */
   findMatchingAction(sentence, actions) {
-    const sentenceWords = sentence.split(/(\s+)/).filter( e => e.trim().length > 0)
-    
+    const sentenceWords = sentence.split(/(\s+)/)
+                                  .filter( e => e.trim().length > 0)
+                                  .map( e => e.toLowerCase())
+                                  .map(e => e.replace("l'", "")) // remove apostrophes
+                                  .map(e => e.normalize("NFD").replace(/\p{Diacritic}/gu, "")) // normalize accents
+
+    // sentenceWords.
+    console.log(sentenceWords)
+    console.log(actions)
     let result = null
     let score = 0
     for (const i in actions) {
       let commands = actions[i].commands
         for (const j in commands) {
           let commandParts = commands[j].split(/(\s+)/).map(s => s.trim()).filter( e => e.length > 0)
+                                        .map( e => e.toLowerCase())
+                                        .map(e => e.replace("l'", "")) // remove apostrophes
+                                        .map(e => e.normalize("NFD").replace(/\p{Diacritic}/gu, "")) // normalize accents
+
           // https://stackoverflow.com/questions/1187518/how-to-get-the-difference-between-two-arrays-in-javascript
           let intersection = sentenceWords.filter(x => commandParts.includes(x))
           // command match action 

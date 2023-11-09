@@ -1,0 +1,244 @@
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="description" content="The zorkdown game engine html example">
+  <title>zorkdown html example</title>
+  <link rel='stylesheet' href='style.css' type='text/css'>
+  
+  <script src='lib/showdown/dist/showdown.min.js'></script>
+  <script src='../../src/zorkdown.js'></script>
+  <script>
+
+    let zork = null
+    let converter = new showdown.Converter();
+    converter.setOption('simpleLineBreaks', true)
+    let editing = false
+
+    
+    function zorkdownInitFromUrl(url) {
+      
+      console.log(url)
+      var request = new XMLHttpRequest()
+      request.open('GET', url, true)
+      request.responseType = 'blob'
+      request.onload = function() {
+        var reader = new FileReader()
+        reader.readAsText(request.response)
+        reader.onload =  function(e){
+            console.log('DataURL:', e.target.result)
+            zorkdownInit(e.target.result, false)
+        }
+      }
+      request.send()
+    }
+
+    function zorkDownInitFromeStorage(game) {
+      console.log(`loading ${game}`)
+      let source = localStorage.getItem(game)
+      zorkdownInit(source)
+    }
+
+    function zorkdownInit(source, restore = true) {
+     
+      if (source != null) {
+        console.log("loaded ok")
+        zork = new Zorkdown(source)
+        zork.setPlaceChangedCallbackFunction(placeChangedCallBack)
+        zork.setErrorCallbackFunction(errorCallBack)
+        const terminal = document.getElementById('zorkdown-terminal')
+        let savedGame = localStorage.getItem("savedZorkDownGame")
+        if (restore && savedGame !== null) { // Game restoration
+          try {
+            savedGame = JSON.parse(savedGame)
+            zork.story.states = savedGame.states
+            zork.story.currentPlace = savedGame.currentPlace
+            document.getElementById("place").innerHTML = zork.story.currentPlace
+          } catch (e) {
+            console.log("Error parsing saved game data")
+            localStorage.removeItem('savedZorkDownGame')
+            terminal.innerHTML += '<p>Game restored</p>'
+          }
+          //console.log(`Rertoring "${game}" game data`)
+          terminal.innerHTML += `<p>"${currentGame}" game data restored</p>`
+          terminal.scrollTop = terminal.scrollHeight
+        } else {
+          localStorage.removeItem('savedZorkDownGame')
+        }
+        
+        console.log(zork)
+        let place = zork.getPlaceByName(zork.story.currentPlace)
+        reply = zork.parseMessage("look", place)
+
+        var html = converter.makeHtml(reply)
+        // html = html.slice(0, 2) + ` class='zorkdown-output' style='--n:${html.length-7}'` + html.slice(2)
+
+        terminal.innerHTML += html
+        terminal.scrollTop = terminal.scrollHeight
+
+        const user_input = document.getElementById('zorkdown-user-input')
+        document.getElementById('title').innerHTML = currentGame.substr(9)
+        user_input.addEventListener('keyup', validate)
+        document.addEventListener('keydown', refocus);
+
+        document.getElementById("place").innerHTML = zork.story.currentPlace
+
+        function refocus(e) {
+          if(!editing) user_input.focus()
+        }
+      } else {
+        alert("No source")
+      }
+    }
+    
+    function placeChangedCallBack(place) {
+      console.log('place changed!')
+      console.log(place)
+      
+      if (place.data.background != null) {
+        document.getElementById("zorkdown-content").style.backgroundColor = place.data.background
+      }
+    }
+
+    function errorCallBack(error) {
+      console.log('error!')
+      console.log(error)
+    }
+
+    function validate(event) {
+      if (event.keyCode !== 13) return
+        
+      event.preventDefault()
+      const input = event.target.innerHTML.replace('<br><br>', '')
+      
+      let message = {}
+      message.content = input.toLowerCase().trim()
+      
+      let place = zork.getPlaceByName(zork.story.currentPlace)
+      let reply = zork.parseMessage(message.content, place)
+      event.target.innerHTML = ''
+      
+      var html = converter.makeHtml(reply)
+      // html = html.slice(0, 2) + ` class='zorkdown-output' style='--n:${html.length-7}'` + html.slice(2)
+
+      const terminal = document.getElementById('zorkdown-terminal')
+      console.log(html+'{#id .class}')
+      terminal.innerHTML += '<p class="zorkdown-input">&gt; ' + input + html
+      terminal.scrollTop = terminal.scrollHeight
+      
+      const user_input = document.getElementById('zorkdown-user-input')
+      user_input.focus()
+      
+      const zork_content = document.getElementById('zorkdown-content')
+      zork_content.scrollTop = zork_content.scrollHeight
+      
+      if (zork.story.placeChanged) {
+        place = zork.getPlaceByName(zork.story.currentPlace)
+        if (place == null) {
+          alert("Error place")
+          zork.story.placeChanged = false
+
+          return
+        }
+        zork.story.placeChanged = false
+        message.content = 'look'
+        reply = zork.parseMessage(message.content, place)
+        var html = converter.makeHtml(reply)
+        // html = html.slice(0, 2) + ` class='zorkdown-output' style='--n:${html.length-7}'` + html.slice(2)
+
+        terminal.innerHTML += html
+        terminal.scrollTop = terminal.scrollHeight
+        document.getElementById("place").innerHTML = place.name
+      }
+
+      // saving game state
+      let savedGame = {
+        currentPlace: zork.story.currentPlace,
+        states: zork.story.states
+      }
+
+      localStorage.setItem("savedZorkDownGame", JSON.stringify(savedGame))
+     
+  }
+  
+  function loadGame() {
+  
+    let gameUrl = prompt(`Please enter the url of the shared Etherpad source file : `).trim()
+    if (gameUrl != null) {
+        window.location = `${window.location.protocol + '//' + window.location.host + window.location.pathname}?source=${gameUrl}`
+        //document.getElementById('zorkdown-terminal').innerHTML = ""
+        // localStorage.removeItem("savedZorkDownGame")
+        // localStorage.setItem("currentZorkDownGame", `ZorkDown-${gameTitle}`)
+       // zorkdownInitFromUrl(`${gameUrl}/export/txt`)
+      } else {
+        alert(`Bad url ${gameUrl} !`)
+      }
+  }
+  
+
+  function exportGame() {
+    let source = document.getElementById('zorkdown-source-input').value
+    var element = document.createElement('a')
+    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(source))
+    element.setAttribute('download', localStorage.getItem('currentZorkDownGame')+".zd")
+
+    element.style.display = 'none'
+    document.body.appendChild(element)
+
+    element.click()
+
+    document.body.removeChild(element)
+  }
+
+  function showSource() {
+
+    const queryString = window.location.search
+    console.log(queryString)
+    const urlParams = new URLSearchParams(queryString)
+    let sourceUrl = urlParams.get('source')
+
+    window.open(sourceUrl, "_blank")
+
+  }
+  function restartGame(){
+    window.location.reload()
+  }
+
+  </script>
+</head>
+<body>
+
+  <div id="topbar">
+    <div id="info">
+      <p id='title'></p>
+      <p id="place">nowhere</p>
+    </div>
+    <div id="buttons">
+      <button id="zorkdown-load" value="new" onclick="loadGame(localStorage.getItem('currentZorkDownGame'))">Load</button>
+      <button id="zorkdown-restart" value="restart" onclick="restartGame(localStorage.getItem('currentZorkDownGame'))">Restart</button>
+      <button id="zorkdown-show-source" value="zorkdown-show-source" onclick="showSource()">Show Source</button>
+      <button id="zorkdown-export" value="export" onclick="exportGame()">Export</button>
+    </div>
+  </div>
+
+  <div class='zorkdown-content' id='zorkdown-content'>
+    <div id='zorkdown-terminal' class='zorkdown-terminal'></div>
+    <span id='zorkdown-user-input' class='zorkdown-user-input' contenteditable autofocus></span>
+  </div>
+
+<script>
+ 
+  const queryString = window.location.search
+  console.log(queryString)
+  const urlParams = new URLSearchParams(queryString)
+  let sourceUrl = urlParams.get('source')
+
+  if (sourceUrl.charAt(sourceUrl.length - 1) == '/') {
+    sourceUrl = sourceUrl.substr(0, sourceUrl.length - 1);
+  }
+
+  console.log(sourceUrl)
+  
+  zorkdownInitFromUrl(`${sourceUrl}/export/txt`)
+</script>
+</body>
+</html>
