@@ -133,7 +133,7 @@ Otherwise, if the condition is `false`, the game engine replies the negative res
 - You have taken the lamp. {+magical lamp}
 ```
 
-It is also possible to reverse a condition with the `!` sign. In this case, `? !magical lamp` means "Do I have **not** the magical lamp?". This condition is `true` if the player do **not** have the magical lamp.
+It is also possible to reverse a condition with the **not** operator `!`. In this case, `? !magical lamp` means "Do I have **not** the magical lamp?". This condition is `true` if the player do **not** have the magical lamp.
 
 ```
 ! take lamp
@@ -142,7 +142,7 @@ It is also possible to reverse a condition with the `!` sign. In this case, `? !
 - You already have the lamp!
 ```
 
-Note that you can check multiple booleans in a single condition, with ` & `. 
+You can check multiple booleans in a single condition, with the **and** operator `&`. 
 
 ```
 ! take lamp
@@ -151,9 +151,30 @@ Note that you can check multiple booleans in a single condition, with ` & `.
 - It is not possible to take the lamp.
 ```
 
+You can aslo check multiple booleans in a single condition, with the **or** operator `/`. 
+
+```
+! take lamp
+? magical lamp / night vision
++ You really don't need that lamp.
+- You have taken the lamp. {+magical lamp} 
+```
+
+And you can combine the **not**, the **and** and the **or** operators to create a complex condition.
+
+````
+! take lamp
+? super powers / !scared of heights & wooden ladder / debug mode
++ You have taken the lamp. {+magical lamp}
+- You don't have what it takes to reach the lamp.
+```
+
+In this case, the **and** operator takes precedence over the **or**.
+To be able to take the lamp you must have **super powers** OR NOT be **scared of heights** AND have the **wooden ladder** OR be in **debug mode**.
+
 #### – Multiple conditions ####
 
-Checking multiple booleans in a single condition sure is useful, but can be rather limited. Know that there is the possibility of having multiple conditions.
+Checking multiple booleans in a single condition sure is useful, but can be rather limited. Know that there is the possibility of having multiple conditions sequentially.
 
 ```
 ! take lamp
