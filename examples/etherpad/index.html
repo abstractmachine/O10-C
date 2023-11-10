@@ -1,8 +1,8 @@
 <html lang="en">
 <head>
 	<meta charset="utf-8">
-	<meta name="description" content="The zorkdown game engine html example">
-  <title>zorkdown html example</title>
+	<meta name="description" content="The zorkdown game engine. Shared Etherpad document example">
+  <title>zorkdown Etherpad example</title>
   <link rel='stylesheet' href='style.css' type='text/css'>
   
   <script src='lib/showdown/dist/showdown.min.js'></script>
@@ -30,12 +30,6 @@
         }
       }
       request.send()
-    }
-
-    function zorkDownInitFromeStorage(game) {
-      console.log(`loading ${game}`)
-      let source = localStorage.getItem(game)
-      zorkdownInit(source)
     }
 
     function zorkdownInit(source, restore = true) {
@@ -162,13 +156,16 @@
   
   function loadGame() {
   
-    let gameUrl = prompt(`Please enter the url of the shared Etherpad source file : `).trim()
-    if (gameUrl != null) {
+    let gameUrl = prompt(`Please enter the url of a shared Etherpad raw text file.\neg : https://etherpad.wikimedia.org/p/zorkdown`).trim()
+    let validUrl = true
+    try {
+      url = new URL(gameUrl)
+    } catch (_) {
+      validUrl = false 
+    }
+
+    if (validUrl === true) {
         window.location = `${window.location.protocol + '//' + window.location.host + window.location.pathname}?source=${gameUrl}`
-        //document.getElementById('zorkdown-terminal').innerHTML = ""
-        // localStorage.removeItem("savedZorkDownGame")
-        // localStorage.setItem("currentZorkDownGame", `ZorkDown-${gameTitle}`)
-       // zorkdownInitFromUrl(`${gameUrl}/export/txt`)
       } else {
         alert(`Bad url ${gameUrl} !`)
       }
@@ -176,33 +173,56 @@
   
 
   function exportGame() {
-    let source = document.getElementById('zorkdown-source-input').value
-    var element = document.createElement('a')
-    element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(source))
-    element.setAttribute('download', localStorage.getItem('currentZorkDownGame')+".zd")
 
-    element.style.display = 'none'
-    document.body.appendChild(element)
+    let doc = document.implementation.createHTMLDocument("New Document")
 
-    element.click()
+    const bodyNode = document.body
+    const bodyClone = bodyNode.cloneNode(true)
 
-    document.body.removeChild(element)
+    const headNode = document.head
+    const headClone = headNode.cloneNode(true)
+
+    doc.head = headClone
+    doc.body = bodyClone
+
+    console.log(doc)
+
+    // let body = document.documentElement.outerHTML
+    // let head = document.head
+    // try {
+    //   doc.body.outerHTML = body
+    //   doc.head = head
+    // } catch (e) {
+    //   console.log(e);
+    // }
+
+    // console.log(doc)
+
+
+    // let source = doc.
+    // var element = document.createElement('a')
+    // element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(source))
+    // element.setAttribute('download', localStorage.getItem('currentZorkDownGame')+".zd")
+
+    // element.style.display = 'none'
+    // document.body.appendChild(element)
+
+    // element.click()
+
+    // document.body.removeChild(element)
   }
 
-  function showSource() {
-
+  function openSource() {
     const queryString = window.location.search
     console.log(queryString)
     const urlParams = new URLSearchParams(queryString)
     let sourceUrl = urlParams.get('source')
-
     window.open(sourceUrl, "_blank")
-
   }
+
   function restartGame(){
     window.location.reload()
   }
-
   </script>
 </head>
 <body>
@@ -215,7 +235,7 @@
     <div id="buttons">
       <button id="zorkdown-load" value="new" onclick="loadGame(localStorage.getItem('currentZorkDownGame'))">Load</button>
       <button id="zorkdown-restart" value="restart" onclick="restartGame(localStorage.getItem('currentZorkDownGame'))">Restart</button>
-      <button id="zorkdown-show-source" value="zorkdown-show-source" onclick="showSource()">Show Source</button>
+      <button id="zorkdown-open-source" value="zorkdown-open-source" onclick="openSource()">Open Source</button>
       <button id="zorkdown-export" value="export" onclick="exportGame()">Export</button>
     </div>
   </div>
@@ -232,12 +252,14 @@
   const urlParams = new URLSearchParams(queryString)
   let sourceUrl = urlParams.get('source')
 
+  // remove trailling /
   if (sourceUrl.charAt(sourceUrl.length - 1) == '/') {
     sourceUrl = sourceUrl.substr(0, sourceUrl.length - 1);
   }
 
   console.log(sourceUrl)
   
+  // init with the raw text export url from the Etherpad shared document
   zorkdownInitFromUrl(`${sourceUrl}/export/txt`)
 </script>
 </body>
