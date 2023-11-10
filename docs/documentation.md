@@ -162,7 +162,7 @@ You can aslo check multiple booleans in a single condition, with the **or** oper
 
 And you can combine the **not**, the **and** and the **or** operators to create a complex condition.
 
-````
+```
 ! take lamp
 ? super powers / !scared of heights & wooden ladder / debug mode
 + You have taken the lamp. {+magical lamp}
