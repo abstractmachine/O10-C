@@ -5,7 +5,7 @@
   <title>zorkdown html example</title>
   <link rel='stylesheet' href='style.css' type='text/css'>
   
-  <script src='lib/markdown-it.js'></script>
+  <script src='lib/markdown-it.min.js'></script>
   <script src='../../src/zorkdown.js'></script>
   <script>
 
@@ -13,7 +13,6 @@
     let converter = window.markdownit()
     let editing = false
 
-    
     function zorkdownInitFromUrl(url) {
       var request = new XMLHttpRequest()
       request.open('GET', url, true)
@@ -30,14 +29,12 @@
     }
 
     function zorkDownInitFromeStorage(game) {
-      console.log(`loading ${game}`)
       let source = localStorage.getItem(game)
       zorkdownInit(source)
     }
 
     function zorkdownInit(source, restore = true) {
       if (source != null) {
-        console.log("loaded ok")
         zork = new Zorkdown(source)
         zork.setPlaceChangedCallbackFunction(placeChangedCallBack)
         zork.setErrorCallbackFunction(errorCallBack)
@@ -61,10 +58,7 @@
           localStorage.removeItem('savedZorkDownGame')
         }
         
-        console.log(zork)
-     
         let place = zork.getPlaceByName(zork.story.currentPlace)
-        console.log('damend')
         reply = zork.parseMessage("look", place)
 
         var html = converter.render(reply)
@@ -116,7 +110,6 @@
       event.target.innerHTML = ''
       
       var html = converter.render(reply)
-      // html = html.slice(0, 2) + ` class='zorkdown-output' style='--n:${html.length-7}'` + html.slice(2)
 
       const terminal = document.getElementById('zorkdown-terminal')
       console.log(html+'{#id .class}')
@@ -140,8 +133,7 @@
         zork.story.placeChanged = false
         message.content = 'look'
         reply = zork.parseMessage(message.content, place)
-        var html = converter.render(reply)
-        // html = html.slice(0, 2) + ` class='zorkdown-output' style='--n:${html.length-7}'` + html.slice(2)
+        let html = converter.render(reply)
 
         terminal.innerHTML += html
         terminal.scrollTop = terminal.scrollHeight
@@ -155,8 +147,6 @@
       }
 
       localStorage.setItem("savedZorkDownGame", JSON.stringify(savedGame))
-      console.log('saving game')
-      console.log(savedGame)
   }
     
   function newGame(game) {
@@ -206,7 +196,6 @@
   }
 
   function editGame(gameTitle) {
-    console.log('edit')
     editing = true
     document.getElementById('zorkdown-source-input').value = localStorage.getItem(gameTitle)
 

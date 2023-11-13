@@ -12,7 +12,6 @@
     let converter = window.markdownit()
     
     function zorkdown_init() {
-      console.log('init')
       let source = getSource('https://happycodefarm.github.io/ZorkDown/examples/story-example.zd')
       .then((source) =>{
         let savedGame = localStorage.getItem("savedGame")
@@ -29,13 +28,11 @@
               console.log("Error parsing saved game data")
               localStorage.removeItem('savedGame')
             }
-            console.log('Rertoring game data')
           } else {
             localStorage.removeItem('savedGame')
           }
         }
         
-        console.log(zork)
         let place = zork.getPlaceByName(zork.story.currentPlace)
         reply = zork.parseMessage("look", place)
 
@@ -98,15 +95,12 @@
         states: zork.story.states
       }
       localStorage.setItem("savedGame", JSON.stringify(savedGame))
-      console.log('saving game')
-      console.log(savedGame)
 
   }
     
     function getSource(url) {
       
       return new Promise(function(resolve, reject) {
-        console.log(url)
         let xmlHttp = new XMLHttpRequest()
         xmlHttp.open('GET',url, true)
         

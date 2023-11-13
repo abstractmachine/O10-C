@@ -5,7 +5,7 @@
   <title>zorkdown Etherpad example</title>
   <link rel='stylesheet' href='style.css' type='text/css'>
   
-  <script src='lib/markdown-it.js'></script>
+  <script src='lib/markdown-it.min.js'></script>
   <script src='../../src/zorkdown.js'></script>
   <script>
 
@@ -13,10 +13,8 @@
     let converter = window.markdownit()
     let editing = false
 
-    
     function zorkdownInitFromUrl(url) {
       
-      console.log(url)
       var request = new XMLHttpRequest()
       request.open('GET', url, true)
       request.responseType = 'blob'
@@ -24,7 +22,6 @@
         var reader = new FileReader()
         reader.readAsText(request.response)
         reader.onload =  function(e){
-            console.log('DataURL:', e.target.result)
             zorkdownInit(e.target.result, false)
         }
       }
@@ -34,7 +31,6 @@
     function zorkdownInit(source, restore = true) {
      
       if (source != null) {
-        console.log("loaded ok")
         zork = new Zorkdown(source)
         zork.setPlaceChangedCallbackFunction(placeChangedCallBack)
         zork.setErrorCallbackFunction(errorCallBack)
@@ -51,20 +47,16 @@
             localStorage.removeItem('savedZorkDownGame')
             terminal.innerHTML += '<p>Game restored</p>'
           }
-          //console.log(`Rertoring "${game}" game data`)
           terminal.innerHTML += `<p>"${currentGame}" game data restored</p>`
           terminal.scrollTop = terminal.scrollHeight
         } else {
           localStorage.removeItem('savedZorkDownGame')
         }
         
-        console.log(zork)
         let place = zork.getPlaceByName(zork.story.currentPlace)
         reply = zork.parseMessage("look", place)
 
         var html = converter.render(reply)
-        // html = html.slice(0, 2) + ` class='zorkdown-output' style='--n:${html.length-7}'` + html.slice(2)
-
         terminal.innerHTML += html
         terminal.scrollTop = terminal.scrollHeight
 
@@ -110,9 +102,7 @@
       let reply = zork.parseMessage(message.content, place)
       event.target.innerHTML = ''
       
-      var html = converter.render(reply)
-      // html = html.slice(0, 2) + ` class='zorkdown-output' style='--n:${html.length-7}'` + html.slice(2)
-
+      let html = converter.render(reply)
       const terminal = document.getElementById('zorkdown-terminal')
       console.log(html+'{#id .class}')
       terminal.innerHTML += '<p class="zorkdown-input">&gt; ' + input + html
@@ -135,8 +125,7 @@
         zork.story.placeChanged = false
         message.content = 'look'
         reply = zork.parseMessage(message.content, place)
-        var html = converter.render(reply)
-        // html = html.slice(0, 2) + ` class='zorkdown-output' style='--n:${html.length-7}'` + html.slice(2)
+        html = converter.render(reply)
 
         terminal.innerHTML += html
         terminal.scrollTop = terminal.scrollHeight
@@ -170,45 +159,8 @@
       }
   }
   
-
   function exportGame() {
-
-    let doc = document.implementation.createHTMLDocument("New Document")
-
-    const bodyNode = document.body
-    const bodyClone = bodyNode.cloneNode(true)
-
-    const headNode = document.head
-    const headClone = headNode.cloneNode(true)
-
-    doc.head = headClone
-    doc.body = bodyClone
-
-    console.log(doc)
-
-    // let body = document.documentElement.outerHTML
-    // let head = document.head
-    // try {
-    //   doc.body.outerHTML = body
-    //   doc.head = head
-    // } catch (e) {
-    //   console.log(e);
-    // }
-
-    // console.log(doc)
-
-
-    // let source = doc.
-    // var element = document.createElement('a')
-    // element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(source))
-    // element.setAttribute('download', localStorage.getItem('currentZorkDownGame')+".zd")
-
-    // element.style.display = 'none'
-    // document.body.appendChild(element)
-
-    // element.click()
-
-    // document.body.removeChild(element)
+    // todo : export standalone html game
   }
 
   function openSource() {
@@ -245,19 +197,14 @@
   </div>
 
 <script>
- 
   const queryString = window.location.search
-  console.log(queryString)
   const urlParams = new URLSearchParams(queryString)
   let sourceUrl = urlParams.get('source')
 
   // remove trailling /
   if (sourceUrl.charAt(sourceUrl.length - 1) == '/') {
     sourceUrl = sourceUrl.substr(0, sourceUrl.length - 1);
-  }
-
-  console.log(sourceUrl)
-  
+  }  
   // init with the raw text export url from the Etherpad shared document
   zorkdownInitFromUrl(`${sourceUrl}/export/txt`)
 </script>
