@@ -5,13 +5,12 @@
   <title>zorkdown Etherpad example</title>
   <link rel='stylesheet' href='style.css' type='text/css'>
   
-  <script src='lib/showdown/dist/showdown.min.js'></script>
+  <script src='lib/markdown-it.js'></script>
   <script src='../../src/zorkdown.js'></script>
   <script>
 
     let zork = null
-    let converter = new showdown.Converter();
-    converter.setOption('simpleLineBreaks', true)
+    let converter = window.markdownit()
     let editing = false
 
     
@@ -63,7 +62,7 @@
         let place = zork.getPlaceByName(zork.story.currentPlace)
         reply = zork.parseMessage("look", place)
 
-        var html = converter.makeHtml(reply)
+        var html = converter.render(reply)
         // html = html.slice(0, 2) + ` class='zorkdown-output' style='--n:${html.length-7}'` + html.slice(2)
 
         terminal.innerHTML += html
@@ -111,7 +110,7 @@
       let reply = zork.parseMessage(message.content, place)
       event.target.innerHTML = ''
       
-      var html = converter.makeHtml(reply)
+      var html = converter.render(reply)
       // html = html.slice(0, 2) + ` class='zorkdown-output' style='--n:${html.length-7}'` + html.slice(2)
 
       const terminal = document.getElementById('zorkdown-terminal')
@@ -136,7 +135,7 @@
         zork.story.placeChanged = false
         message.content = 'look'
         reply = zork.parseMessage(message.content, place)
-        var html = converter.makeHtml(reply)
+        var html = converter.render(reply)
         // html = html.slice(0, 2) + ` class='zorkdown-output' style='--n:${html.length-7}'` + html.slice(2)
 
         terminal.innerHTML += html

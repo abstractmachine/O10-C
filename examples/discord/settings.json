@@ -1,8 +1,0 @@
-{
-    "discordToken": "DISCORD-TOKEN-HERE!",
-    "storyUrl": "https://happycodefarm.github.io/ZorkDown/examples/story-example.zd",
-    "logGame" : true,
-    "directMessageMode": true,
-    "cleanUpMessages": true,
-    "debug": true
-}

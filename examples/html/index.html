@@ -5,12 +5,11 @@
   <title>zorkdown html example</title>
   <link rel='stylesheet' href='style.css' type='text/css'>
   
-  <script src='https://unpkg.com/showdown/dist/showdown.min.js'></script>
+  <script src='https://unpkg.com/markdown-it/dist/markdown-it.min.js' type='text/javascript'></script>
   <script src='../../src/zorkdown.js'></script>
   <script>
     let zork = null
-    var converter = new showdown.Converter();
-    converter.setOption('simpleLineBreaks', true)
+    let converter = window.markdownit()
     
     function zorkdown_init() {
       console.log('init')
@@ -40,7 +39,7 @@
         let place = zork.getPlaceByName(zork.story.currentPlace)
         reply = zork.parseMessage("look", place)
 
-        var html = converter.makeHtml(reply)
+        var html = converter.render(reply)
         const terminal = document.getElementById('zorkdown-terminal')
 
         terminal.innerHTML += '<p> ' + html + '</p>'
@@ -72,7 +71,7 @@
       let reply = zork.parseMessage(message.content, place)
       event.target.innerHTML = ''
       
-      var html = converter.makeHtml(reply)
+      var html = converter.render(reply)
       const terminal = document.getElementById('zorkdown-terminal')
       terminal.innerHTML += '<p>> ' + input + '</p><p> ' + html + '</p>'
       terminal.scrollTop = terminal.scrollHeight
@@ -88,7 +87,7 @@
         zork.story.placeChanged = false
         message.content = 'look'
         reply = zork.parseMessage(message.content, place)
-        var html = converter.makeHtml(reply)
+        var html = converter.render(reply)
         terminal.innerHTML += '<p> ' + html + '</p>'
         terminal.scrollTop = terminal.scrollHeight
       }

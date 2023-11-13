@@ -1,1 +1,0 @@
-# This is a Discord.js example.

@@ -1,7 +1,7 @@
 Documentation
 =============
 
-*(syntax name : ZorkDown ?)* is a lightweight single file game engine to play [Zork]-like interactive game. There are two things: the parser on the one hand (a single light .js file), and a your text content on the other hand, i.e. the content of the textual game.
+ZorkDown is a lightweight single file game engine to play [Zork]-like interactive game. There are two things: the parser on the one hand (a single light .js file), and a your text content on the other hand, i.e. the content of the textual game.
 
 Its syntax is meant to be closer to writing logic than pure programing logic. (Blablabla logic-less syntaxe based on markdown.) Here is a simple example.
 
@@ -16,7 +16,7 @@ As you can see, anyone can fairly easily understand what these two lines are abo
 
 ### Main functionalities ###
 
-*(syntax name)* is inspired by [Zork]. (explain how Zork works)
+ZorDown is inspired by [Zork]. (explain how Zork works)
 
 #### – Actions ####
 

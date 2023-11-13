@@ -35,7 +35,6 @@ class Zorkdown {
   
   */
   constructor(source) {
- 
     this.story = {
       places:[],
       defaults: null,
@@ -85,11 +84,13 @@ class Zorkdown {
   parseMessage(message, place) {
     message = message
     let reply = ""
+  
+    if (message == 'inventory') return this.getInventory()
+
     // juste au cas où le salon n'a pas d'actions définies
     if (place == null || !place.hasOwnProperty("actions")) {
-      return "There is nothing to do here..."
+      return "nop"
     }
-    if (message == 'inventory') return this.getInventory()
 
     // rechercher une action correspondant au message dans le salon actuel
     let action = this.findMatchingAction(message, place.actions)
@@ -111,23 +112,22 @@ class Zorkdown {
       if (!this.isEmpty(response.conditions)) { // la réponse est soumise à condition(s)
       
         let oneOk = false
-
         for (const condition of response.conditions) { // tous les & 
           let ok = true
 
-         for (const conditionPart in condition) {
+          for (const conditionPart in condition) {
           
-          if (this.story.states[conditionPart] == null) console.log(`Parser warning: "${conditionPart}" not declared !`)
-          if ((this.story.states[conditionPart] != null) && (this.story.states[conditionPart].state != condition[conditionPart])) {
-            // the condition is not reached
-            ok = false
-            break; // AND condition not satisfied, no needs to go further
+            if (this.story.states[conditionPart] == null) console.log(`Parser warning: "${conditionPart}" not declared !`)
+            if ((this.story.states[conditionPart] != null) && (this.story.states[conditionPart].state != condition[conditionPart])) {
+              // the condition is not reached
+              ok = false
+              break; // AND condition not satisfied, no needs to go further
+            } 
+          }
+          if (ok) { // OR condition satisfied
+            oneOk = true
+            break
           } 
-         }
-         if (ok) { // OR condition satisfied
-          oneOk = true
-          break
-         } 
         }
         
         let tmpReply = oneOk ? this.getPassedResponse(response) : this.getFailedResponse(response)
@@ -192,7 +192,7 @@ class Zorkdown {
           this.story.placeChanged = true
           this.placeChanged(newPlace)
         } else {
-          this.errorRaised(`Error: No place named ${variable}`)
+          this.errorRaised(`Error: computeReply, no place named ${variable}`)
         }
        
       } else if (operator == "=") { // 'death' command
@@ -239,7 +239,6 @@ class Zorkdown {
       source: The ZorkDown string source of the story.
     */
   parseStory(source) {
-    
     const scenarioLines = source.split(/[\r\n]+/g)
 
     // restet strory properties
@@ -276,109 +275,109 @@ class Zorkdown {
     let lineIndex = 0
     let line = ""
     try {
-    for (lineIndex in scenarioLines) {
-      line = scenarioLines[lineIndex]
-      
-      switch(line.trim()[0]) {
-        case "#": // nouveau salon
-          lastTag = "#"
-          action = null
-          responses = null
-          // créer un nouvel objet place avec son nom
-          const placeName = line.substring(1).trim()
-          place = placeTemplate(placeName)
-          this.story.places.push(place) // add the new place to the story
-          break
-          
-        case "{":
-          lastTag = "{"
-          let data = JSON.parse(line.trim())
-          for (var i in data) {
-            place.data[i] = data[i]
-          }
-          break
-        case "!": // action(s) du salon
-          lastTag = "!"
-          // trouver toutes les actions et synonymes : fait ci / fait ça / fait quoi
-          let allCommands = line.substring(1).trim()
-          let commands = allCommands.split(/\//g).map(s => s.trim()).filter( e => e.length > 0)// séparer les actions par /
-          
-          action = actionTemplate(commands)
-          responses = null
-          
-          place.actions.push(action) // ajouter l'objet action au salon
-          break;
-        case "?": // condition de réaction
-          lastTag = "?"
-          responses = responsesTemplate()
-          let allConditions = line.substring(1).trim()
+      for (lineIndex in scenarioLines) {
+        line = scenarioLines[lineIndex]
 
-          // AND OR order of operations
-          // evaluate AND first
-          // midi & faim / midi & soif == (midi & faim) / (midi & soif)
-          let conditionOr = allConditions.split(/\//g).map(s => s.trim()).filter( e => e.length > 0)// séparer les bloc de conditions par /
-          let conditionsGroup = []
-          
-          for (const conditionsAnd of conditionOr) { // les groupes de /
-            let conditions = conditionsAnd.split(/\&/g).map(s => s.trim()).filter( e => e.length > 0)// séparer les conditions par &
-            let conditionsParts = {}
-            for (const condition of conditions) { // les groupes de &
-              if (condition[0]=="!") {
-                conditionsParts[condition.substring(1).trim()]= false
-                this.story.states[condition.substring(1).trim()] = {
-                  "state":false,
-                  "description": null
-                }
-              } else {
-                conditionsParts[condition]= true
-                this.story.states[condition] = {
-                  "state":false,
-                  "description": null
+        switch(line.trim()[0]) {
+          case "#": // nouveau salon
+            lastTag = "#"
+            action = null
+            responses = null
+            // créer un nouvel objet place avec son nom
+            const placeName = line.substring(1).trim()
+            place = placeTemplate(placeName)
+            this.story.places.push(place) // add the new place to the story
+            break
+            
+          case "{":
+            lastTag = "{"
+            let data = JSON.parse(line.trim())
+            for (var i in data) {
+              place.data[i] = data[i]
+            }
+            break
+          case "!": // action(s) du salon
+            lastTag = "!"
+            // trouver toutes les actions et synonymes : fait ci / fait ça / fait quoi
+            let allCommands = line.substring(1).trim()
+            let commands = allCommands.split(/\//g).map(s => s.trim()).filter( e => e.length > 0)// séparer les actions par /
+            
+            action = actionTemplate(commands)
+            responses = null
+            
+            place.actions.push(action) // ajouter l'objet action au salon
+            break;
+          case "?": // condition de réaction
+            lastTag = "?"
+            responses = responsesTemplate()
+            let allConditions = line.substring(1).trim()
+
+            // AND OR order of operations
+            // evaluate AND first
+            // midi & faim / midi & soif == (midi & faim) / (midi & soif)
+            let conditionOr = allConditions.split(/\//g).map(s => s.trim()).filter( e => e.length > 0)// séparer les bloc de conditions par /
+            let conditionsGroup = []
+            
+            for (const conditionsAnd of conditionOr) { // les groupes de /
+              let conditions = conditionsAnd.split(/\&/g).map(s => s.trim()).filter( e => e.length > 0)// séparer les conditions par &
+              let conditionsParts = {}
+              for (const condition of conditions) { // les groupes de &
+                if (condition[0]=="!") {
+                  conditionsParts[condition.substring(1).trim()]= false
+                  this.story.states[condition.substring(1).trim()] = {
+                    "state":false,
+                    "description": null
+                  }
+                } else {
+                  conditionsParts[condition]= true
+                  this.story.states[condition] = {
+                    "state":false,
+                    "description": null
+                  }
                 }
               }
+              conditionsGroup.push(conditionsParts)
             }
-            conditionsGroup.push(conditionsParts)
-          }
-     
-          responses.conditions = conditionsGroup
-          action.responses.push(responses)
-          break;	
-        case "+": // pass condition 
-          lastTag = "+"
-          if (responses===null) {
-            responses = responsesTemplate()
+            responses.conditions = conditionsGroup
             action.responses.push(responses)
-          }
-          let positiveResponse = line.substring(1).trim()
-          responses.pass.push(positiveResponse)
-          break;
-        case "-": // fail condition
-          lastTag = "-"
-          if (responses===null) {
-            responses = responsesTemplate()
-            action.responses.push(responses)
-          }
-          let negativeResponse = line.substring(1).trim()
-          responses.fail.push(negativeResponse)
-          break
-        case ">": // ignore commented lines
-          break
-        default:
-          if (responses != null) {
-            if (lastTag == "+") {
-              responses.pass[responses.pass.length - 1] += `\n${line}`
-            } else if(lastTag == "-") {
-              responses.fail[responses.fail.length - 1] += `\n${line}`
-            } else {
-              this.errorRaised(`Warning, syntaxe error at line ${line}`)
+            break;	
+          case "+": // pass condition 
+            lastTag = "+"
+            if (responses===null) {
+              responses = responsesTemplate()
+              action.responses.push(responses)
             }
-          }
-      }
-    }	
+            let positiveResponse = line.substring(1).trim()
+            responses.pass.push(positiveResponse)
+            break;
+          case "-": // fail condition
+            lastTag = "-"
+            if (responses===null) {
+              responses = responsesTemplate()
+              action.responses.push(responses)
+            }
+            let negativeResponse = line.substring(1).trim()
+            responses.fail.push(negativeResponse)
+            break
+          case ">": // ignore commented lines
+            break
+          default:
+            if (responses != null) {
+              if (lastTag == "+") {
+                responses.pass[responses.pass.length - 1] += `\n${line}`
+              } else if(lastTag == "-") {
+                responses.fail[responses.fail.length - 1] += `\n${line}`
+              } else {
+                this.errorRaised(`Warning, syntaxe error at line ${line}`)
+              }
+            }
+        }
+      }	
   } catch (e) {
     this.errorRaised(`Error parsing source code at line ${lineIndex} near ${line}`)
     alert(`Error parsing source code at line ${lineIndex} near ${line}`)
   }
+  // to do handle no place
     this.story.currentPlace = this.story.places[0].name
   }
   
@@ -392,12 +391,14 @@ class Zorkdown {
       The matching place object or null on failure.
     */
   getPlaceByName(placeName) {
+    console.log('placeName')
+    console.log(placeName)
     for (const place of this.story.places) {
       if (place.name.toLowerCase() == placeName.toLowerCase()) {
         return place
       }
     }
-    this.errorRaised(`Error: no place named ${placeName}`)
+    this.errorRaised(`Error: getPlaceByName, no place named ${placeName}`)
 
     // no place with that name, return null
     return null
@@ -420,9 +421,7 @@ class Zorkdown {
                                   .map(e => e.replace("l'", "")) // remove apostrophes
                                   .map(e => e.normalize("NFD").replace(/\p{Diacritic}/gu, "")) // normalize accents
 
-    // sentenceWords.
-    console.log(sentenceWords)
-    console.log(actions)
+    // sentence words
     let result = null
     let score = 0
     for (const i in actions) {
