@@ -3,5 +3,5 @@ story.json
 package-lock.json
 node_modules/
 .vscode/
-.DStore
-*.DStore
+.DS_Store
+*..DS_Store
