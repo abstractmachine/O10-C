@@ -1,0 +1,143 @@
+
+* {
+  font-family: monospace;
+  font-size: 16px;
+}
+
+:root {
+  color-scheme: light dark; /* both supported */
+}
+
+.zorkdown-content {
+  margin:0 1em 0 1em;
+  padding:0 1em 0 1em;
+  padding-bottom: 8em;
+  border:0;
+  box-sizing: border-box;
+  height: 100vh;
+  max-height: 100vh;
+  position: fixed;
+  width: 100%;
+  overflow-y: scroll;
+}
+
+.zorkdown-output {
+
+}
+
+.zorkdown-terminal {
+  width: 100%;
+  height: auto;
+  margin: 0;
+  padding-bottom: 0;
+  border: none;
+}
+
+p {
+  margin: 0;
+  margin-bottom: 1em;
+  padding: 0;
+}
+
+ul {
+  margin: 0;
+  margin-left: 1em;
+  margin-bottom: 1em;
+  padding: 0;
+}
+
+.zorkdown-user-input {
+  padding: 0;
+  outline: none;
+  border: none;
+  font-family: monospace;
+  width: auto;
+  min-width: 200px;
+}
+
+@keyframes blinker {
+  50% {
+    opacity: 0;
+  }
+}
+
+.zorkdown-user-input::before {
+  content: "> ";
+}
+
+.zorkdown-user-input:empty::after {
+  content: attr(placeholder);
+  animation: blinker 1s linear infinite;
+}
+
+.zorkdown-source-input {
+  display: none; /* Hidden by default */
+  position: fixed; /* Sit on top of the page content */
+  width: 100%; /* Full width (cover the whole page) */
+  height: calc(100% - 3em); /* Full height (cover the whole page) */
+  top: 3em;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2; /* Specify a stack order in case you're using a different order for other elements */
+
+  padding: 1em;
+  outline: none;
+  border: none;
+  font-family: monospace;
+ 
+  background-color: black;
+  opacity: 90%;
+  color: blanchedalmond;
+  resize: none;
+
+  overflow-y: scroll;
+} 
+
+#topbar {
+  margin: 0;
+  padding: 0.25em 0.25em 0 0.25em;
+  display: flex;
+  flex-direction: row;
+  z-index: 999;
+  box-sizing: content-box;
+  justify-content: space-between;
+  align-items:baseline;
+}
+
+#info {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-start;  
+}
+
+#info > p {
+  margin-right: 0.25em;
+  padding: 0.5em;
+}
+
+#title {
+  font-weight: bold;
+}
+
+#buttons {
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+}
+
+button {
+  background-color: #4CAF50; /* Green */
+  border: none;
+  color: white;
+  padding: 0.5em;
+  text-align: center;
+  text-decoration: none;
+  margin-left: 0.25em;  
+}
+
+button:active {
+  background-color: #317133;
+}
+
+
